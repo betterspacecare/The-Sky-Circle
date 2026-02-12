@@ -3,24 +3,82 @@
 @import "tailwindcss";
 
 @theme {
-    /* Vibrant Magical Palette */
-    --color-cosmic-purple: #c084fc;
-    /* Lighter, more neon */
-    --color-cosmic-pink: #f472b6;
-    /* Electric pink */
-    --color-cosmic-blue: #60a5fa;
-    /* Bright celestial blue */
-    --color-cosmic-gold: #fbbf24;
-    /* Warm stellar gold */
-    --color-cosmic-dark: #0a0e27;
-    --color-cosmic-darker: #000000;
+    /* Surface Colors */
+    --color-surface-50: #E6E6E6;
+    --color-surface-100: #C7D0E3;
+    --color-surface-200: #CDDED1;
+    --color-surface-300: #D8D5D2;
+    --color-surface-400: #A9AEB4;
+    --color-surface-500: #6B7178;
+    --color-surface-600: #4B5970;
+    --color-surface-700: #3F5756;
+    --color-surface-800: #323B30;
+    --color-surface-900: #202327;
 
-    --color-background: #030712;
-    --color-foreground: #ffffff;
+    /* Primary Colors (Purple/Violet) */
+    --color-primary-50: #F0E5FF;
+    --color-primary-100: #B8B5FC;
+    --color-primary-200: #7D49F8;
+    --color-primary-300: #5528F7;
+    --color-primary-400: #5071E4;
+
+    /* Secondary Colors (Cyan/Teal) */
+    --color-secondary-50: #A3B1FC;
+    --color-secondary-100: #77B8EL;
+    --color-secondary-200: #3BDDDF;
+    --color-secondary-300: #C2F0F2;
+    --color-secondary-400: #11F0E8;
+
+    /* Danger Colors (Red/Pink) */
+    --color-danger-50: #F8A5A4;
+    --color-danger-100: #F11856;
+    --color-danger-200: #EA5A69;
+    --color-danger-300: #F56A22;
+    --color-danger-400: #E41712;
+
+    /* Success Colors (Green) */
+    --color-success-50: #91DFD0;
+    --color-success-100: #1DC570;
+    --color-success-200: #12E22F;
+    --color-success-300: #F1LL40;
+    --color-success-400: #E0F4E4;
+
+    /* Warning Colors (Yellow/Orange) */
+    --color-warning-50: #F4AFBA;
+    --color-warning-100: #F0D805;
+    --color-warning-200: #E2AB13;
+    --color-warning-300: #E1E322;
+    --color-warning-400: #F6E220;
+
+    /* Dark Colors */
+    --color-dark-50: #121212;
+    --color-dark-100: #151515;
+    --color-dark-200: #1A1A1A;
+    --color-dark-300: #1C1C1C;
+    --color-dark-400: #1E1E1E;
+
+    /* Opacity Colors */
+    --color-opacity-primary: rgba(113, 67, 255, 0.15);
+    --color-opacity-secondary: rgba(17, 240, 232, 0.15);
+    --color-opacity-danger: rgba(234, 90, 105, 0.15);
+    --color-opacity-success: rgba(29, 197, 112, 0.15);
+    --color-opacity-warning: rgba(240, 216, 5, 0.15);
+    --color-opacity-modal: rgba(18, 18, 18, 0.5);
+
+    /* Semantic Mappings */
+    --color-cosmic-purple: #7D49F8;
+    --color-cosmic-pink: #F11856;
+    --color-cosmic-blue: #3BDDDF;
+    --color-cosmic-gold: #F0D805;
+    --color-cosmic-dark: #121212;
+    --color-cosmic-darker: #0a0a0a;
+
+    --color-background: #121212;
+    --color-foreground: #E6E6E6;
 
     /* Semantic light text */
-    --color-text-dim: rgba(255, 255, 255, 0.5);
-    --color-text-muted: rgba(255, 255, 255, 0.7);
+    --color-text-dim: rgba(230, 230, 230, 0.5);
+    --color-text-muted: rgba(230, 230, 230, 0.7);
 }
 
 :root {
@@ -29,12 +87,12 @@
 }
 
 html {
-    background: #030712;
+    background: #121212;
 }
 
 body {
     background: transparent;
-    color: var(--foreground);
+    color: var(--color-foreground);
     font-family: var(--font-outfit);
     min-height: 100vh;
     margin: 0;
@@ -50,7 +108,7 @@ body {
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    background: #030712;
+    background: #121212;
 }
 
 /* Stars layer */
@@ -60,15 +118,15 @@ body {
     inset: 0;
     background:
         url("https://www.transparenttextures.com/patterns/stardust.png"),
-        radial-gradient(1.5px 1.5px at 10% 20%, rgba(255, 255, 255, 0.95), transparent),
-        radial-gradient(1px 1px at 40% 60%, rgba(255, 255, 255, 0.9), transparent),
-        radial-gradient(1.5px 1.5px at 70% 30%, rgba(255, 255, 255, 0.85), transparent),
-        radial-gradient(2px 2px at 25% 80%, rgba(255, 255, 255, 0.9), transparent),
-        radial-gradient(1px 1px at 85% 70%, rgba(255, 255, 255, 0.8), transparent),
-        radial-gradient(1.5px 1.5px at 55% 15%, rgba(255, 255, 255, 0.95), transparent),
-        radial-gradient(1px 1px at 90% 45%, rgba(255, 255, 255, 0.85), transparent);
+        radial-gradient(1.5px 1.5px at 10% 20%, rgba(230, 230, 230, 0.9), transparent),
+        radial-gradient(1px 1px at 40% 60%, rgba(230, 230, 230, 0.85), transparent),
+        radial-gradient(1.5px 1.5px at 70% 30%, rgba(230, 230, 230, 0.8), transparent),
+        radial-gradient(2px 2px at 25% 80%, rgba(230, 230, 230, 0.85), transparent),
+        radial-gradient(1px 1px at 85% 70%, rgba(230, 230, 230, 0.75), transparent),
+        radial-gradient(1.5px 1.5px at 55% 15%, rgba(230, 230, 230, 0.9), transparent),
+        radial-gradient(1px 1px at 90% 45%, rgba(230, 230, 230, 0.8), transparent);
     background-size: 300px 300px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
-    opacity: 0.8;
+    opacity: 0.6;
 }
 
 /* Nebula layer */
@@ -77,13 +135,13 @@ body {
     position: absolute;
     inset: 0;
     background:
-        radial-gradient(ellipse at 15% 15%, rgba(192, 132, 252, 0.4) 0%, transparent 50%),
-        radial-gradient(ellipse at 85% 85%, rgba(244, 114, 182, 0.35) 0%, transparent 50%),
-        radial-gradient(ellipse at 75% 20%, rgba(96, 165, 250, 0.3) 0%, transparent 45%),
-        radial-gradient(ellipse at 20% 80%, rgba(251, 191, 36, 0.25) 0%, transparent 45%),
-        radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.2) 0%, transparent 55%);
+        radial-gradient(ellipse at 15% 15%, rgba(125, 73, 248, 0.35) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 85%, rgba(241, 24, 86, 0.3) 0%, transparent 50%),
+        radial-gradient(ellipse at 75% 20%, rgba(59, 221, 223, 0.25) 0%, transparent 45%),
+        radial-gradient(ellipse at 20% 80%, rgba(240, 216, 5, 0.2) 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 50%, rgba(125, 73, 248, 0.15) 0%, transparent 55%);
     filter: blur(40px);
-    opacity: 0.8;
+    opacity: 0.7;
 }
 
 /* ============================================
@@ -248,60 +306,82 @@ body {
 .glass-purple {
     background: linear-gradient(
         135deg,
-        rgba(192, 132, 252, 0.2) 0%,
-        rgba(192, 132, 252, 0.1) 100%
+        rgba(125, 73, 248, 0.2) 0%,
+        rgba(125, 73, 248, 0.1) 100%
     );
     backdrop-filter: blur(40px) saturate(180%);
     -webkit-backdrop-filter: blur(40px) saturate(180%);
-    border: 1px solid rgba(192, 132, 252, 0.25);
+    border: 1px solid rgba(125, 73, 248, 0.25);
 }
 
 .glass-purple:hover {
     background: linear-gradient(
         135deg,
-        rgba(192, 132, 252, 0.25) 0%,
-        rgba(192, 132, 252, 0.12) 100%
+        rgba(125, 73, 248, 0.25) 0%,
+        rgba(125, 73, 248, 0.12) 100%
     );
     box-shadow:
-        0 12px 40px rgba(192, 132, 252, 0.2),
+        0 12px 40px rgba(125, 73, 248, 0.2),
         inset 0 1px 1px rgba(255, 255, 255, 0.15);
 }
 
 .glass-pink {
     background: linear-gradient(
         135deg,
-        rgba(244, 114, 182, 0.2) 0%,
-        rgba(244, 114, 182, 0.1) 100%
+        rgba(241, 24, 86, 0.2) 0%,
+        rgba(241, 24, 86, 0.1) 100%
     );
     backdrop-filter: blur(40px) saturate(180%);
     -webkit-backdrop-filter: blur(40px) saturate(180%);
-    border: 1px solid rgba(244, 114, 182, 0.25);
+    border: 1px solid rgba(241, 24, 86, 0.25);
 }
 
 .glass-blue {
     background: linear-gradient(
         135deg,
-        rgba(96, 165, 250, 0.2) 0%,
-        rgba(96, 165, 250, 0.1) 100%
+        rgba(59, 221, 223, 0.2) 0%,
+        rgba(59, 221, 223, 0.1) 100%
     );
     backdrop-filter: blur(40px) saturate(180%);
     -webkit-backdrop-filter: blur(40px) saturate(180%);
-    border: 1px solid rgba(96, 165, 250, 0.25);
+    border: 1px solid rgba(59, 221, 223, 0.25);
 }
 
 .glass-gold {
     background: linear-gradient(
         135deg,
-        rgba(251, 191, 36, 0.2) 0%,
-        rgba(251, 191, 36, 0.1) 100%
+        rgba(240, 216, 5, 0.2) 0%,
+        rgba(240, 216, 5, 0.1) 100%
     );
     backdrop-filter: blur(40px) saturate(180%);
     -webkit-backdrop-filter: blur(40px) saturate(180%);
-    border: 1px solid rgba(251, 191, 36, 0.25);
+    border: 1px solid rgba(240, 216, 5, 0.25);
+}
+
+.glass-success {
+    background: linear-gradient(
+        135deg,
+        rgba(29, 197, 112, 0.2) 0%,
+        rgba(29, 197, 112, 0.1) 100%
+    );
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid rgba(29, 197, 112, 0.25);
+}
+
+.glass-danger {
+    background: linear-gradient(
+        135deg,
+        rgba(234, 90, 105, 0.2) 0%,
+        rgba(234, 90, 105, 0.1) 100%
+    );
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid rgba(234, 90, 105, 0.25);
 }
 
 .text-gradient {
-    background: linear-gradient(135deg, #c084fc 0%, #f472b6 50%, #60a5fa 100%);
+    background: linear-gradient(135deg, #7D49F8 0%, #F11856 50%, #3BDDDF 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -342,9 +422,9 @@ body {
     inset: -50%;
     z-index: -1;
     background:
-        radial-gradient(circle at 20% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(236, 72, 153, 0.1) 0%, transparent 40%),
-        radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+        radial-gradient(circle at 20% 30%, rgba(125, 73, 248, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(241, 24, 86, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(59, 221, 223, 0.15) 0%, transparent 50%);
     filter: blur(80px);
     opacity: 0.6;
     pointer-events: none;
@@ -408,8 +488,8 @@ h5,
 h6,
 .font-space {
     font-family: var(--font-space) !important;
-    color: #ffffff !important;
-    text-shadow: 0 0 8px rgba(192, 132, 252, 0.2) !important;
+    color: #E6E6E6 !important;
+    text-shadow: 0 0 8px rgba(125, 73, 248, 0.2) !important;
     letter-spacing: -0.02em;
 }
 
@@ -516,28 +596,42 @@ h6,
 .glass-glow-purple {
     box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.3),
-        0 0 60px rgba(192, 132, 252, 0.15),
+        0 0 60px rgba(125, 73, 248, 0.15),
         inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 .glass-glow-pink {
     box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.3),
-        0 0 60px rgba(244, 114, 182, 0.15),
+        0 0 60px rgba(241, 24, 86, 0.15),
         inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 .glass-glow-blue {
     box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.3),
-        0 0 60px rgba(96, 165, 250, 0.15),
+        0 0 60px rgba(59, 221, 223, 0.15),
         inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 .glass-glow-gold {
     box-shadow:
         0 8px 32px rgba(0, 0, 0, 0.3),
-        0 0 60px rgba(251, 191, 36, 0.15),
+        0 0 60px rgba(240, 216, 5, 0.15),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.glass-glow-success {
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 60px rgba(29, 197, 112, 0.15),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.glass-glow-danger {
+    box-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 60px rgba(234, 90, 105, 0.15),
         inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
