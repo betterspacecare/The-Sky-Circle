@@ -560,46 +560,46 @@ export default function CommunityFeedPage() {
 
     return (
         <div className="py-0">
-            <div className="flex flex-col lg:flex-row gap-8">
+            <div className="flex flex-col lg:flex-row gap-6 sm:gap-8">
                 {/* Main Feed */}
-                <div className="flex-1 space-y-6 max-w-2xl">
+                <div className="flex-1 space-y-4 sm:space-y-6 max-w-2xl">
                     {/* Create Post Card */}
-                    <div className="glass-effect rounded-3xl p-6">
-                        <div className="flex gap-4">
-                            <div className="w-12 h-12 rounded-full overflow-hidden glass-inner flex-shrink-0 flex items-center justify-center">
+                    <div className="glass-effect rounded-2xl sm:rounded-3xl p-4 sm:p-6">
+                        <div className="flex gap-3 sm:gap-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden glass-inner flex-shrink-0 flex items-center justify-center">
                                 {currentUser?.profile_photo_url ? (
                                     <img src={currentUser.profile_photo_url} className="w-full h-full object-cover" alt="" />
                                 ) : (
-                                    <User className="w-6 h-6 text-white/30" />
+                                    <User className="w-5 h-5 sm:w-6 sm:h-6 text-white/30" />
                                 )}
                             </div>
-                            <div className="flex-1 space-y-4">
+                            <div className="flex-1 space-y-3 sm:space-y-4">
                                 <textarea
                                     value={newCaption}
                                     onChange={(e) => setNewCaption(e.target.value)}
                                     placeholder="Share your cosmic discovery..."
-                                    className="w-full bg-transparent border-none focus:ring-0 text-lg resize-none placeholder:text-white/30 text-white"
+                                    className="w-full bg-transparent border-none focus:ring-0 text-sm sm:text-lg resize-none placeholder:text-white/30 text-white"
                                     rows={2}
                                 />
 
                                 {imagePreview && (
-                                    <div className="relative aspect-video rounded-2xl overflow-hidden glass-inner group">
+                                    <div className="relative aspect-video rounded-xl sm:rounded-2xl overflow-hidden glass-inner group">
                                         <img src={imagePreview} className="w-full h-full object-cover" alt="" />
                                         <button
                                             onClick={() => { setSelectedImage(null); setImagePreview(null) }}
-                                            className="absolute top-3 right-3 p-2 glass-effect rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                            className="absolute top-2 sm:top-3 right-2 sm:right-3 p-1.5 sm:p-2 glass-effect rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity"
                                         >
-                                            <X className="w-4 h-4" />
+                                            <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                         </button>
                                     </div>
                                 )}
 
-                                <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                                <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-white/5">
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
-                                        className="flex items-center gap-2 text-white/40 hover:text-cosmic-blue transition-all text-sm"
+                                        className="flex items-center gap-1.5 sm:gap-2 text-white/40 hover:text-cosmic-blue transition-all text-xs sm:text-sm"
                                     >
-                                        <ImageIcon className="w-5 h-5" />
+                                        <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5" />
                                         <span>Add Photo</span>
                                     </button>
                                     <input ref={fileInputRef} type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
@@ -607,9 +607,9 @@ export default function CommunityFeedPage() {
                                     <button
                                         onClick={handleCreatePost}
                                         disabled={creating || !newCaption || !selectedImage}
-                                        className="px-5 py-2 bg-gradient-to-r from-cosmic-purple to-cosmic-pink rounded-xl font-semibold flex items-center gap-2 disabled:opacity-40 hover:scale-105 active:scale-95 transition-all text-sm"
+                                        className="px-4 sm:px-5 py-1.5 sm:py-2 bg-gradient-to-r from-cosmic-purple to-cosmic-pink rounded-lg sm:rounded-xl font-semibold flex items-center gap-1.5 sm:gap-2 disabled:opacity-40 hover:scale-105 active:scale-95 transition-all text-xs sm:text-sm"
                                     >
-                                        {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                        {creating ? <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" /> : <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                                         Post
                                     </button>
                                 </div>
@@ -618,7 +618,7 @@ export default function CommunityFeedPage() {
                     </div>
 
                     {/* Feed Filter Tabs */}
-                    <div className="glass-effect rounded-2xl p-1.5 flex gap-1">
+                    <div className="glass-effect rounded-xl sm:rounded-2xl p-1 sm:p-1.5 flex gap-1">
                         {[
                             { key: 'latest', label: 'Latest', icon: Clock },
                             { key: 'trending', label: 'Trending', icon: Flame },
@@ -627,13 +627,13 @@ export default function CommunityFeedPage() {
                                 key={key}
                                 onClick={() => setFeedFilter(key as FeedFilter)}
                                 className={cn(
-                                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all",
+                                    "flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all",
                                     feedFilter === key 
                                         ? "bg-gradient-to-r from-cosmic-purple/30 to-cosmic-pink/30 text-white" 
                                         : "text-white/50 hover:text-white/80"
                                 )}
                             >
-                                <Icon className="w-4 h-4" />
+                                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                 {label}
                             </button>
                         ))}
@@ -641,45 +641,45 @@ export default function CommunityFeedPage() {
 
                     {/* Posts */}
                     {loading ? (
-                        <div className="space-y-6">
+                        <div className="space-y-4 sm:space-y-6">
                             {[1, 2].map(i => (
-                                <div key={i} className="glass-effect h-[450px] rounded-3xl animate-pulse" />
+                                <div key={i} className="glass-effect h-[350px] sm:h-[450px] rounded-2xl sm:rounded-3xl animate-pulse" />
                             ))}
                         </div>
                     ) : posts.length === 0 ? (
-                        <div className="glass-effect rounded-3xl p-12 text-center">
-                            <Sparkles className="w-12 h-12 text-cosmic-purple mx-auto mb-4" />
-                            <h3 className="text-xl font-bold mb-2">No posts yet</h3>
-                            <p className="text-white/50">Be the first to share a cosmic discovery!</p>
+                        <div className="glass-effect rounded-2xl sm:rounded-3xl p-8 sm:p-12 text-center">
+                            <Sparkles className="w-10 h-10 sm:w-12 sm:h-12 text-cosmic-purple mx-auto mb-3 sm:mb-4" />
+                            <h3 className="text-lg sm:text-xl font-bold mb-2">No posts yet</h3>
+                            <p className="text-sm sm:text-base text-white/50">Be the first to share a cosmic discovery!</p>
                         </div>
                     ) : (
                         posts.map(post => (
-                            <div key={post.id} className="glass-effect rounded-3xl relative">
+                            <div key={post.id} className="glass-effect rounded-2xl sm:rounded-3xl relative">
                                 {/* Post Header */}
-                                <div className="p-5 flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
+                                <div className="p-3 sm:p-5 flex items-center justify-between">
+                                    <div className="flex items-center gap-2 sm:gap-3">
                                         <div className="relative">
-                                            <div className="w-11 h-11 rounded-full overflow-hidden glass-inner flex items-center justify-center">
+                                            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden glass-inner flex items-center justify-center">
                                                 {post.users?.profile_photo_url ? (
                                                     <img src={post.users.profile_photo_url} className="w-full h-full object-cover" alt="" />
                                                 ) : (
-                                                    <User className="w-5 h-5 text-white/30" />
+                                                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-white/30" />
                                                 )}
                                             </div>
                                             {onlineUsers.some(u => u.id === post.user_id) && (
-                                                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-cosmic-gold rounded-full border-2 border-dark-50" />
+                                                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-cosmic-gold rounded-full border-2 border-dark-50" />
                                             )}
                                         </div>
                                         <div>
-                                            <div className="flex items-center gap-2">
-                                                <p className="font-semibold text-white">{post.users?.display_name || 'Observer'}</p>
+                                            <div className="flex items-center gap-1.5 sm:gap-2">
+                                                <p className="font-semibold text-sm sm:text-base text-white">{post.users?.display_name || 'Observer'}</p>
                                                 {post.users?.level && post.users.level >= 5 && (
-                                                    <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-cosmic-purple to-cosmic-pink rounded text-white">
+                                                    <span className="px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-[10px] font-bold bg-gradient-to-r from-cosmic-purple to-cosmic-pink rounded text-white">
                                                         LVL {post.users.level}
                                                     </span>
                                                 )}
                                             </div>
-                                            <p className="text-xs text-white/40">{formatTimeAgo(post.created_at)}</p>
+                                            <p className="text-[10px] sm:text-xs text-white/40">{formatTimeAgo(post.created_at)}</p>
                                         </div>
                                     </div>
                                     <button 
@@ -693,9 +693,9 @@ export default function CommunityFeedPage() {
                                                 setMenuAnchorRect(e.currentTarget.getBoundingClientRect())
                                             }
                                         }}
-                                        className="text-white/30 hover:text-white transition-colors p-2"
+                                        className="text-white/30 hover:text-white transition-colors p-1.5 sm:p-2"
                                     >
-                                        <MoreHorizontal className="w-5 h-5" />
+                                        <MoreHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
                                     </button>
                                     {showPostMenu === post.id && menuAnchorRect && (
                                         <PostMenu
@@ -715,8 +715,8 @@ export default function CommunityFeedPage() {
 
                                 {/* Caption */}
                                 {post.caption && (
-                                    <div className="px-5 pb-3">
-                                        <p className="text-white/90 text-[15px] leading-relaxed">{post.caption}</p>
+                                    <div className="px-3 sm:px-5 pb-2 sm:pb-3">
+                                        <p className="text-white/90 text-sm sm:text-[15px] leading-relaxed">{post.caption}</p>
                                     </div>
                                 )}
 
@@ -732,30 +732,30 @@ export default function CommunityFeedPage() {
                                 </div>
 
                                 {/* Actions */}
-                                <div className="p-5">
-                                    <div className="flex items-center gap-5 mb-3">
+                                <div className="p-3 sm:p-5">
+                                    <div className="flex items-center gap-4 sm:gap-5 mb-2 sm:mb-3">
                                         <button
                                             onClick={() => toggleLike(post.id, post.is_liked)}
                                             className={cn(
-                                                "flex items-center gap-2 transition-all active:scale-125",
+                                                "flex items-center gap-1.5 sm:gap-2 transition-all active:scale-125",
                                                 post.is_liked ? "text-cosmic-pink" : "text-white/50 hover:text-white"
                                             )}
                                         >
-                                            <Heart className={cn("w-6 h-6", post.is_liked && "fill-current")} />
-                                            <span className="text-sm font-medium">{post.likes_count}</span>
+                                            <Heart className={cn("w-5 h-5 sm:w-6 sm:h-6", post.is_liked && "fill-current")} />
+                                            <span className="text-xs sm:text-sm font-medium">{post.likes_count}</span>
                                         </button>
                                         <button 
                                             onClick={() => toggleComments(post.id)}
-                                            className="flex items-center gap-2 text-white/50 hover:text-white transition-colors"
+                                            className="flex items-center gap-1.5 sm:gap-2 text-white/50 hover:text-white transition-colors"
                                         >
-                                            <MessageCircle className="w-6 h-6" />
-                                            <span className="text-sm font-medium">{post.comments_count}</span>
+                                            <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+                                            <span className="text-xs sm:text-sm font-medium">{post.comments_count}</span>
                                         </button>
                                         <button 
                                             onClick={() => sharePost(post)}
-                                            className="flex items-center gap-2 text-white/30 hover:text-white transition-colors ml-auto"
+                                            className="flex items-center gap-1.5 sm:gap-2 text-white/30 hover:text-white transition-colors ml-auto"
                                         >
-                                            <Share2 className="w-5 h-5" />
+                                            <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
                                         </button>
                                         <button 
                                             onClick={() => toggleBookmark(post.id)}
@@ -764,53 +764,53 @@ export default function CommunityFeedPage() {
                                                 bookmarkedPosts.has(post.id) ? "text-cosmic-gold" : "text-white/30 hover:text-cosmic-gold"
                                             )}
                                         >
-                                            <Bookmark className={cn("w-5 h-5", bookmarkedPosts.has(post.id) && "fill-current")} />
+                                            <Bookmark className={cn("w-4 h-4 sm:w-5 sm:h-5", bookmarkedPosts.has(post.id) && "fill-current")} />
                                         </button>
                                     </div>
 
                                     {/* Comments Section */}
                                     {expandedComments.has(post.id) && (
-                                        <div className="border-t border-white/5 pt-4 mt-3 space-y-4">
+                                        <div className="border-t border-white/5 pt-3 sm:pt-4 mt-2 sm:mt-3 space-y-3 sm:space-y-4">
                                             {/* Comments List */}
-                                            <div className="space-y-3 max-h-64 overflow-y-auto">
+                                            <div className="space-y-2 sm:space-y-3 max-h-48 sm:max-h-64 overflow-y-auto">
                                                 {post.comments?.map(comment => (
-                                                    <div key={comment.id} className="flex gap-3 group">
-                                                        <div className="w-8 h-8 rounded-full overflow-hidden glass-inner flex-shrink-0 flex items-center justify-center">
+                                                    <div key={comment.id} className="flex gap-2 sm:gap-3 group">
+                                                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden glass-inner flex-shrink-0 flex items-center justify-center">
                                                             {comment.users?.profile_photo_url ? (
                                                                 <img src={comment.users.profile_photo_url} className="w-full h-full object-cover" alt="" />
                                                             ) : (
-                                                                <User className="w-4 h-4 text-white/30" />
+                                                                <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/30" />
                                                             )}
                                                         </div>
-                                                        <div className="flex-1 glass-inner rounded-2xl px-4 py-2.5 relative">
-                                                            <div className="flex items-center gap-2 mb-1">
-                                                                <span className="text-sm font-medium text-white">{comment.users?.display_name || 'User'}</span>
-                                                                <span className="text-xs text-white/30">{formatTimeAgo(comment.created_at)}</span>
+                                                        <div className="flex-1 glass-inner rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 relative">
+                                                            <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5 sm:mb-1">
+                                                                <span className="text-xs sm:text-sm font-medium text-white">{comment.users?.display_name || 'User'}</span>
+                                                                <span className="text-[10px] sm:text-xs text-white/30">{formatTimeAgo(comment.created_at)}</span>
                                                             </div>
-                                                            <p className="text-sm text-white/80">{comment.content}</p>
+                                                            <p className="text-xs sm:text-sm text-white/80">{comment.content}</p>
                                                             {currentUser?.id === comment.user_id && (
                                                                 <button
                                                                     onClick={() => deleteComment(comment.id, post.id)}
-                                                                    className="absolute top-2 right-2 p-1 text-white/20 hover:text-cosmic-pink opacity-0 group-hover:opacity-100 transition-all"
+                                                                    className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 p-1 text-white/20 hover:text-cosmic-pink opacity-0 group-hover:opacity-100 transition-all"
                                                                 >
-                                                                    <X className="w-3.5 h-3.5" />
+                                                                    <X className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                                                                 </button>
                                                             )}
                                                         </div>
                                                     </div>
                                                 ))}
                                                 {(!post.comments || post.comments.length === 0) && (
-                                                    <p className="text-center text-white/30 text-sm py-4">No comments yet. Be the first!</p>
+                                                    <p className="text-center text-white/30 text-xs sm:text-sm py-3 sm:py-4">No comments yet. Be the first!</p>
                                                 )}
                                             </div>
 
                                             {/* Comment Input */}
-                                            <div className="flex gap-3 items-center">
-                                                <div className="w-8 h-8 rounded-full overflow-hidden glass-inner flex-shrink-0 flex items-center justify-center">
+                                            <div className="flex gap-2 sm:gap-3 items-center">
+                                                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden glass-inner flex-shrink-0 flex items-center justify-center">
                                                     {currentUser?.profile_photo_url ? (
                                                         <img src={currentUser.profile_photo_url} className="w-full h-full object-cover" alt="" />
                                                     ) : (
-                                                        <User className="w-4 h-4 text-white/30" />
+                                                        <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/30" />
                                                     )}
                                                 </div>
                                                 <div className="flex-1 flex gap-2">
@@ -820,17 +820,17 @@ export default function CommunityFeedPage() {
                                                         onChange={(e) => setCommentInputs(prev => ({ ...prev, [post.id]: e.target.value }))}
                                                         onKeyDown={(e) => e.key === 'Enter' && submitComment(post.id)}
                                                         placeholder="Write a comment..."
-                                                        className="flex-1 glass-input rounded-xl px-4 py-2 text-sm text-white placeholder:text-white/30"
+                                                        className="flex-1 glass-input rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-white placeholder:text-white/30"
                                                     />
                                                     <button
                                                         onClick={() => submitComment(post.id)}
                                                         disabled={!commentInputs[post.id]?.trim() || submittingComment === post.id}
-                                                        className="p-2 bg-cosmic-purple/30 hover:bg-cosmic-purple/50 rounded-xl disabled:opacity-40 transition-all"
+                                                        className="p-1.5 sm:p-2 bg-cosmic-purple/30 hover:bg-cosmic-purple/50 rounded-lg sm:rounded-xl disabled:opacity-40 transition-all"
                                                     >
                                                         {submittingComment === post.id ? (
-                                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                                            <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
                                                         ) : (
-                                                            <Send className="w-4 h-4" />
+                                                            <Send className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                                                         )}
                                                     </button>
                                                 </div>
@@ -842,7 +842,7 @@ export default function CommunityFeedPage() {
                                     {post.comments_count > 0 && !expandedComments.has(post.id) && (
                                         <button 
                                             onClick={() => toggleComments(post.id)}
-                                            className="text-white/40 text-sm hover:text-white/60 transition-colors"
+                                            className="text-white/40 text-xs sm:text-sm hover:text-white/60 transition-colors"
                                         >
                                             View all {post.comments_count} comments
                                         </button>

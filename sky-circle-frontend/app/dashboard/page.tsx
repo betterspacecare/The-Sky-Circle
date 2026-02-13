@@ -57,19 +57,19 @@ export default async function DashboardPage() {
         .limit(6)
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8">
             {/* Welcome Header */}
             <div>
-                <h1 className="text-4xl font-bold mb-2 text-white">
+                <h1 className="text-2xl sm:text-4xl font-bold mb-2 text-white">
                     Welcome back, {profile?.display_name || 'Stargazer'}! 🌟
                 </h1>
-                <p className="text-white/60">
+                <p className="text-white/60 text-sm sm:text-base">
                     Look up. Stay curious.
                 </p>
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                 <StatsWidget
                     title="Total Points"
                     value={profile?.total_points || 0}
@@ -100,9 +100,9 @@ export default async function DashboardPage() {
             <ProgressCard profile={profile} />
 
             {/* Two Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                 {/* Left Column - 2/3 width */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-4 sm:space-y-6">
                     {/* Badge Showcase */}
                     <BadgeShowcase userId={user.id} earnedBadges={badges || []} />
 
@@ -114,7 +114,7 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* Right Column - 1/3 width */}
-                <div className="space-y-6">
+                <div className="space-y-4 sm:space-y-6">
                     {/* Current Mission */}
                     {activeMissions && <MissionCard mission={activeMissions} userId={user.id} />}
 

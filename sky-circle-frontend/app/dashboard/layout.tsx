@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import DashboardNav from '@/components/dashboard/DashboardNav'
 import Footer from '@/components/Footer'
 import NotificationProvider from '@/components/NotificationProvider'
+import FeedbackButton from '@/components/FeedbackButton'
 
 export default async function DashboardLayout({
     children,
@@ -19,12 +20,13 @@ export default async function DashboardLayout({
 
     return (
         <NotificationProvider userId={user.id}>
-            <div className="min-h-screen flex flex-col">
+            <div className="min-h-screen flex flex-col relative">
                 <DashboardNav />
-                <main className="max-w-7xl mx-auto px-4 py-8 flex-1 w-full">
+                <main className="max-w-7xl mx-auto px-4 py-8 flex-1 w-full relative z-10">
                     {children}
                 </main>
                 <Footer />
+                <FeedbackButton />
             </div>
         </NotificationProvider>
     )

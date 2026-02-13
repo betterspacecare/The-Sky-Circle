@@ -676,6 +676,97 @@ h6,
 }
 
 /* ============================================
+   ANIMATED TWINKLING STARS
+   ============================================ */
+
+@keyframes twinkle {
+    0%, 100% { 
+        opacity: 0.2;
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
+@keyframes twinkle-slow {
+    0%, 100% { 
+        opacity: 0.3;
+    }
+    50% { 
+        opacity: 0.8;
+    }
+}
+
+@keyframes shooting-star {
+    0% {
+        transform: translateX(0) translateY(0);
+        opacity: 1;
+    }
+    70% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(300px) translateY(300px);
+        opacity: 0;
+    }
+}
+
+.star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle 3s ease-in-out infinite;
+    box-shadow: 0 0 6px 1px rgba(255, 255, 255, 0.3);
+}
+
+.star-slow {
+    animation: twinkle-slow 5s ease-in-out infinite;
+}
+
+.star-fast {
+    animation: twinkle 1.5s ease-in-out infinite;
+}
+
+.star-purple {
+    background: #a78bfa;
+    box-shadow: 0 0 8px 2px rgba(167, 139, 250, 0.5);
+}
+
+.star-pink {
+    background: #f472b6;
+    box-shadow: 0 0 8px 2px rgba(244, 114, 182, 0.5);
+}
+
+.star-blue {
+    background: #60a5fa;
+    box-shadow: 0 0 8px 2px rgba(96, 165, 250, 0.5);
+}
+
+.star-gold {
+    background: #fbbf24;
+    box-shadow: 0 0 8px 2px rgba(251, 191, 36, 0.5);
+}
+
+.shooting-star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: linear-gradient(90deg, white, transparent);
+    animation: shooting-star 3s ease-out infinite;
+}
+
+/* Star field container */
+.star-field {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+/* ============================================
    GLOBAL BUTTON CURSOR FIX
    ============================================ */
 

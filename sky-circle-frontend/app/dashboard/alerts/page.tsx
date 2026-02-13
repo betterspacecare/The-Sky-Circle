@@ -226,45 +226,45 @@ export default function AlertsPage() {
     return (
         <div className="py-0">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-primary-200/20 to-danger-100/20 flex items-center justify-center">
-                        <Bell className="w-8 h-8 text-primary-200" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+                <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-[1.5rem] bg-gradient-to-br from-primary-200/20 to-danger-100/20 flex items-center justify-center">
+                        <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-primary-200" />
                     </div>
                     <div>
-                        <h1 className="text-4xl font-black">Notifications</h1>
-                        <p className="text-surface-400">Stay updated with sky events and activity</p>
+                        <h1 className="text-2xl sm:text-4xl font-black">Notifications</h1>
+                        <p className="text-sm sm:text-base text-surface-400">Stay updated with sky events and activity</p>
                     </div>
                 </div>
                 
                 {activeTab !== 'settings' && unreadNotifications.length > 0 && (
                     <button
                         onClick={handleMarkAllAsRead}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl glass-effect hover:bg-white/10 transition-all text-sm font-bold text-surface-300 hover:text-surface-50"
+                        className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl glass-effect hover:bg-white/10 transition-all text-xs sm:text-sm font-bold text-surface-300 hover:text-surface-50"
                     >
-                        <CheckCheck className="w-4 h-4" />
+                        <CheckCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         Mark all read
                     </button>
                 )}
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
+            <div className="flex gap-2 mb-6 sm:mb-8 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar">
                 {tabs.map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
-                            "flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all whitespace-nowrap",
+                            "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 sm:py-3 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap",
                             activeTab === tab.id
                                 ? "bg-gradient-to-r from-primary-200/30 to-danger-100/20 text-surface-50"
                                 : "glass-effect text-surface-400 hover:text-surface-50 hover:bg-white/10"
                         )}
                     >
-                        {tab.id === 'settings' ? <Settings className="w-4 h-4" /> : null}
+                        {tab.id === 'settings' ? <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : null}
                         {tab.label}
                         {tab.count > 0 && (
-                            <span className="px-2 py-0.5 rounded-full bg-danger-100 text-white text-xs">
+                            <span className="px-1.5 sm:px-2 py-0.5 rounded-full bg-danger-100 text-white text-[10px] sm:text-xs">
                                 {tab.count}
                             </span>
                         )}

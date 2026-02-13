@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { StarField } from "@/components/StarField";
 
 export const metadata: Metadata = {
   title: "SkyGuild | Astronomy Community",
@@ -21,6 +22,7 @@ export default function RootLayout({
       <body className="antialiased">
         {/* Background layer for stars and nebula - sits behind content for backdrop-filter */}
         <div className="cosmic-bg" aria-hidden="true" />
+        <StarField starCount={120} showShootingStars={true} />
         {children}
       </body>
     </html>
