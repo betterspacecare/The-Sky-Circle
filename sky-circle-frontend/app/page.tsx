@@ -14,7 +14,7 @@ export default function Home() {
 
           {/* Title */}
           <h1 className="text-6xl md:text-8xl font-bold mb-6">
-            <span className="text-gradient">The Sky Circle</span>
+            <span className="text-gradient">SkyGuild</span>
           </h1>
 
           {/* Tagline */}
@@ -157,7 +157,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="py-8 px-4 border-t border-white/10">
         <div className="max-w-6xl mx-auto text-center text-gray-400">
-          <p>© 2026 The Sky Circle. Built with ❤️ for the astronomy community.</p>
+          <p>© 2026 SkyGuild. Built with ❤️ for the astronomy community.</p>
         </div>
       </footer>
     </div>

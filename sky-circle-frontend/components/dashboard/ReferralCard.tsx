@@ -28,8 +28,8 @@ export default function ReferralCard({ referralCode }: ReferralCardProps) {
     const handleShare = () => {
         if (typeof navigator !== 'undefined' && navigator.share) {
             navigator.share({
-                title: 'Join The Sky Circle',
-                text: 'Join me on The Sky Circle - a community for astronomy enthusiasts!',
+                title: 'Join SkyGuild',
+                text: 'Join me on SkyGuild - a community for astronomy enthusiasts!',
                 url: referralUrl,
             }).catch(() => {
                 // Silently fail or handle share cancel

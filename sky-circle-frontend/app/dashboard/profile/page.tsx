@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { User, Settings, Camera, Trophy, Star, MapPin, Telescope, Edit3, Loader2, LogOut } from 'lucide-react'
+import { User, Settings, Camera, Trophy, Star, MapPin, Telescope, Edit3, Loader2, LogOut, Shield, CheckCircle2, Clock } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { EXPERIENCE_LEVELS, STORAGE_BUCKETS } from '@/lib/constants'
 import { useRouter } from 'next/navigation'
@@ -17,6 +17,8 @@ interface UserProfile {
     level: number
     total_points: number
     referral_code: string
+    is_event_creator: boolean
+    guild_leader_application_status: string | null
 }
 
 export default function ProfilePage() {
@@ -27,6 +29,9 @@ export default function ProfilePage() {
     const [editing, setEditing] = useState(false)
     const [saving, setSaving] = useState(false)
     const [badges, setBadges] = useState<any[]>([])
+    const [applyingGuildLeader, setApplyingGuildLeader] = useState(false)
+    const [applicationReason, setApplicationReason] = useState('')
+    const [showApplicationModal, setShowApplicationModal] = useState(false)
 
     const [editForm, setEditForm] = useState({
         display_name: '',
@@ -100,6 +105,42 @@ export default function ProfilePage() {
         router.refresh()
     }
 
+    const handleGuildLeaderApplication = async () => {
+        if (!applicationReason.trim()) return
+        
+        setApplyingGuildLeader(true)
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) throw new Error('Not authenticated')
+
+            // Insert application
+            const { error } = await supabase
+                .from('guild_leader_applications')
+                .insert({
+                    user_id: user.id,
+                    reason: applicationReason,
+                    status: 'pending'
+                })
+
+            if (error) throw error
+
+            // Update user's application status
+            await supabase
+                .from('users')
+                .update({ guild_leader_application_status: 'pending' })
+                .eq('id', user.id)
+
+            setProfile({ ...profile!, guild_leader_application_status: 'pending' })
+            setShowApplicationModal(false)
+            setApplicationReason('')
+            alert('Application submitted! We\'ll review it soon.')
+        } catch (error: any) {
+            alert('Failed to submit application: ' + error.message)
+        } finally {
+            setApplyingGuildLeader(false)
+        }
+    }
+
     if (loading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
             <Loader2 className="w-10 h-10 text-cosmic-purple animate-spin" />
@@ -109,7 +150,7 @@ export default function ProfilePage() {
     if (!profile) return null
 
     return (
-        <div className="max-w-5xl mx-auto py-8 px-4">
+        <div className="py-0">
             {/* Header / Banner */}
             <div className="relative rounded-[3rem] overflow-hidden mb-12 h-64 group">
                 <div className="absolute inset-0 bg-gradient-to-r from-cosmic-purple/40 to-cosmic-blue/40 z-10" />
@@ -200,6 +241,52 @@ export default function ProfilePage() {
                             <code className="font-bold text-cosmic-purple">{profile.referral_code}</code>
                             <button className="text-[10px] font-black uppercase tracking-widest bg-cosmic-purple px-3 py-1 rounded-full">Copy</button>
                         </div>
+                    </div>
+
+                    {/* Guild Leader Status */}
+                    <div className="glass-effect rounded-[2rem] p-8">
+                        <div className="flex items-center gap-3 mb-4">
+                            <Shield className="w-6 h-6 text-cosmic-purple" />
+                            <h4 className="font-black text-xl">Guild Leader</h4>
+                        </div>
+                        
+                        {profile.is_event_creator ? (
+                            <div className="flex items-center gap-3 p-4 bg-green-500/10 rounded-xl border border-green-500/20">
+                                <CheckCircle2 className="w-5 h-5 text-green-400" />
+                                <div>
+                                    <p className="font-bold text-green-400">Approved</p>
+                                    <p className="text-xs text-white/50">You can create guilds and organize events</p>
+                                </div>
+                            </div>
+                        ) : profile.guild_leader_application_status === 'pending' ? (
+                            <div className="flex items-center gap-3 p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                                <Clock className="w-5 h-5 text-amber-400" />
+                                <div>
+                                    <p className="font-bold text-amber-400">Application Pending</p>
+                                    <p className="text-xs text-white/50">We're reviewing your application</p>
+                                </div>
+                            </div>
+                        ) : profile.guild_leader_application_status === 'rejected' ? (
+                            <div>
+                                <p className="text-sm text-white/50 mb-4">Your previous application was not approved. You can apply again.</p>
+                                <button
+                                    onClick={() => setShowApplicationModal(true)}
+                                    className="w-full py-3 bg-cosmic-purple/20 text-cosmic-purple rounded-xl font-bold hover:bg-cosmic-purple/30 transition-all"
+                                >
+                                    Apply Again
+                                </button>
+                            </div>
+                        ) : (
+                            <div>
+                                <p className="text-sm text-white/50 mb-4">Become a Guild Leader to create astronomy groups and organize free stargazing events for the community.</p>
+                                <button
+                                    onClick={() => setShowApplicationModal(true)}
+                                    className="w-full py-3 bg-gradient-to-r from-cosmic-purple to-cosmic-pink rounded-xl font-bold hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] transition-all"
+                                >
+                                    Apply to Become a Guild Leader
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -306,6 +393,74 @@ export default function ProfilePage() {
                     )}
                 </div>
             </div>
+
+            {/* Guild Leader Application Modal */}
+            {showApplicationModal && (
+                <div 
+                    className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    onClick={() => setShowApplicationModal(false)}
+                >
+                    <div 
+                        className="glass-effect rounded-3xl p-8 max-w-md w-full"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <div className="flex items-center gap-3 mb-6">
+                            <Shield className="w-8 h-8 text-cosmic-purple" />
+                            <h3 className="text-2xl font-black">Become a Guild Leader</h3>
+                        </div>
+                        
+                        <p className="text-white/50 mb-6">
+                            Guild Leaders can create astronomy groups and organize free stargazing events. 
+                            Tell us why you'd like to become a Guild Leader.
+                        </p>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-white/60 mb-2">
+                                    Why do you want to become a Guild Leader?
+                                </label>
+                                <textarea
+                                    value={applicationReason}
+                                    onChange={(e) => setApplicationReason(e.target.value)}
+                                    className="w-full px-4 py-3 glass-inner rounded-xl resize-none text-white placeholder:text-white/30"
+                                    rows={4}
+                                    placeholder="Share your astronomy experience, what kind of events you'd like to organize, etc."
+                                    required
+                                />
+                            </div>
+
+                            <div className="glass-inner rounded-xl p-4 text-sm text-white/50">
+                                <p className="font-bold text-white/70 mb-2">Requirements:</p>
+                                <ul className="list-disc list-inside space-y-1">
+                                    <li>Active member with at least 5 observations</li>
+                                    <li>Genuine interest in astronomy education</li>
+                                    <li>Commitment to organizing quality events</li>
+                                </ul>
+                            </div>
+
+                            <div className="flex gap-3 pt-4">
+                                <button
+                                    onClick={() => setShowApplicationModal(false)}
+                                    className="flex-1 py-3 glass-inner rounded-xl font-medium"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleGuildLeaderApplication}
+                                    disabled={applyingGuildLeader || !applicationReason.trim()}
+                                    className="flex-1 py-3 bg-gradient-to-r from-cosmic-purple to-cosmic-pink rounded-xl font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {applyingGuildLeader ? (
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : (
+                                        'Submit Application'
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

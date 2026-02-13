@@ -63,7 +63,7 @@ export default function LoginPage() {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 mb-4 animate-float">
                         <Telescope className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="text-4xl font-bold text-gradient mb-2">The Sky Circle</h1>
+                    <h1 className="text-4xl font-bold text-gradient mb-2">SkyGuild</h1>
                     <p className="text-gray-400">Look up. Stay curious.</p>
                 </div>
 
@@ -111,6 +111,11 @@ export default function LoginPage() {
                                     placeholder="••••••••"
                                     required
                                 />
+                            </div>
+                            <div className="text-right mt-2">
+                                <Link href="/forgot-password" className="text-sm text-cosmic-purple hover:text-cosmic-pink transition-colors">
+                                    Forgot password?
+                                </Link>
                             </div>
                         </div>
 

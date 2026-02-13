@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useUserStore } from '@/store/userStore'
+import { useNotificationStore } from '@/store/notificationStore'
 import { useAlertStore } from '@/store/alertStore'
 import {
     Telescope,
@@ -17,7 +18,8 @@ import {
     LogOut,
     Sparkles,
     Menu,
-    X
+    X,
+    UsersRound
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -26,7 +28,9 @@ export default function DashboardNav() {
     const router = useRouter()
     const supabase = createClient()
     const { user, profile, setUser, setProfile } = useUserStore()
-    const { unreadCount } = useAlertStore()
+    const { unreadCount: alertUnreadCount } = useAlertStore()
+    const { unreadCount: notificationUnreadCount } = useNotificationStore()
+    const totalUnread = alertUnreadCount + notificationUnreadCount
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
     useEffect(() => {
@@ -60,6 +64,7 @@ export default function DashboardNav() {
         { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/dashboard/observations', label: 'Observations', icon: Eye },
         { href: '/dashboard/events', label: 'Events', icon: Calendar },
+        { href: '/dashboard/groups', label: 'Guilds', icon: UsersRound },
         { href: '/dashboard/missions', label: 'Missions', icon: Trophy },
         { href: '/dashboard/community', label: 'Community', icon: Users },
     ]
@@ -82,7 +87,7 @@ export default function DashboardNav() {
                                     </div>
                                 </div>
                                 <div className="hidden sm:block">
-                                    <span className="font-black text-lg tracking-tight text-surface-50 block leading-none">The Sky Circle</span>
+                                    <span className="font-black text-lg tracking-tight text-surface-50 block leading-none">SkyGuild</span>
                                     <span className="text-[9px] font-bold text-surface-400 uppercase tracking-[0.2em]">Look up. Stay curious.</span>
                                 </div>
                             </Link>
@@ -126,7 +131,7 @@ export default function DashboardNav() {
                                     className="relative p-2.5 rounded-xl glass-inner hover:bg-white/10 transition-all text-surface-400 hover:text-surface-50 group"
                                 >
                                     <Bell className="w-5 h-5 group-hover:animate-[wiggle_0.3s_ease-in-out]" />
-                                    {unreadCount > 0 && (
+                                    {totalUnread > 0 && (
                                         <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-danger-100 rounded-full shadow-[0_0_8px_rgba(241,24,86,0.8)] animate-pulse" />
                                     )}
                                 </Link>
