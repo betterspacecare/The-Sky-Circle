@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Search, Check, X, Loader2, Users, Globe, Lock, Trash2, Calendar } from 'lucide-react'
+import { Search, Check, X, Loader2, Users, Globe, Lock, Trash2, Calendar, Star, Sparkles } from 'lucide-react'
 
 interface Group {
     id: string
@@ -154,19 +154,23 @@ export function GroupsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h2 className="text-xl font-semibold text-white">Guilds & Events</h2>
-                    <p className="text-slate-400 text-sm">{groups.length} guilds, {groupEvents.length} events</p>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Sparkles className="w-5 h-5 text-purple-400" />
+                        <span className="text-purple-400 font-bold text-xs tracking-wider uppercase">Community Management</span>
+                    </div>
+                    <p className="text-white/40 text-sm">{groups.length} guilds, {groupEvents.length} events</p>
                 </div>
                 <div className="flex gap-2">
                     {pendingCount > 0 && (
-                        <div className="px-4 py-2 bg-amber-500/20 text-amber-400 rounded-lg text-sm font-medium">
+                        <div className="px-4 py-2 bg-amber-500/10 text-amber-400 rounded-xl text-sm font-bold border border-amber-500/20">
                             {pendingCount} guilds pending
                         </div>
                     )}
                     {pendingEventsCount > 0 && (
-                        <div className="px-4 py-2 bg-purple-500/20 text-purple-400 rounded-lg text-sm font-medium">
+                        <div className="px-4 py-2 bg-purple-500/10 text-purple-400 rounded-xl text-sm font-bold border border-purple-500/20">
                             {pendingEventsCount} events pending
                         </div>
                     )}
@@ -174,26 +178,38 @@ export function GroupsPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 border-b border-slate-700 pb-4">
+            <div className="flex gap-2 border-b border-purple-500/20 pb-4">
                 <button
                     onClick={() => setActiveTab('guilds')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer ${
-                        activeTab === 'guilds' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                    className={`px-5 py-2.5 rounded-xl font-bold transition-all ${
+                        activeTab === 'guilds' 
+                            ? 'btn-cosmic text-white' 
+                            : 'text-white/50 hover:text-white hover:bg-white/5'
                     }`}
                 >
                     <Users className="w-4 h-4 inline mr-2" />
                     Guilds
-                    {pendingCount > 0 && <span className="ml-2 px-1.5 py-0.5 bg-amber-500 text-white text-xs rounded">{pendingCount}</span>}
+                    {pendingCount > 0 && (
+                        <span className="ml-2 px-2 py-0.5 bg-amber-500 text-white text-xs rounded-full font-bold">
+                            {pendingCount}
+                        </span>
+                    )}
                 </button>
                 <button
                     onClick={() => setActiveTab('events')}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors cursor-pointer ${
-                        activeTab === 'events' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'
+                    className={`px-5 py-2.5 rounded-xl font-bold transition-all ${
+                        activeTab === 'events' 
+                            ? 'btn-cosmic text-white' 
+                            : 'text-white/50 hover:text-white hover:bg-white/5'
                     }`}
                 >
                     <Calendar className="w-4 h-4 inline mr-2" />
                     Guild Events
-                    {pendingEventsCount > 0 && <span className="ml-2 px-1.5 py-0.5 bg-purple-500 text-white text-xs rounded">{pendingEventsCount}</span>}
+                    {pendingEventsCount > 0 && (
+                        <span className="ml-2 px-2 py-0.5 bg-purple-500 text-white text-xs rounded-full font-bold">
+                            {pendingEventsCount}
+                        </span>
+                    )}
                 </button>
             </div>
 
@@ -202,214 +218,219 @@ export function GroupsPage() {
                     {/* Filters */}
                     <div className="flex flex-col sm:flex-row gap-4">
                         <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
                             <input
                                 type="text"
                                 placeholder="Search guilds..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                </div>
-                <div className="flex gap-2">
-                    {(['all', 'pending', 'approved'] as const).map(f => (
-                        <button
-                            key={f}
-                            onClick={() => setFilter(f)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors capitalize cursor-pointer ${
-                                filter === f
-                                    ? 'bg-indigo-600 text-white'
-                                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                            }`}
-                        >
-                            {f}
-                            {f === 'pending' && pendingCount > 0 && (
-                                <span className="ml-2 px-1.5 py-0.5 bg-amber-500 text-white text-xs rounded">
-                                    {pendingCount}
-                                </span>
-                            )}
-                        </button>
-                    ))}
-                </div>
-            </div>
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                className="w-full pl-12 pr-4 py-3 glass-input rounded-xl text-white placeholder-white/30"
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            {(['all', 'pending', 'approved'] as const).map(f => (
+                                <button
+                                    key={f}
+                                    onClick={() => setFilter(f)}
+                                    className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all capitalize ${
+                                        filter === f
+                                            ? 'btn-cosmic text-white'
+                                            : 'glass-input text-white/60 hover:text-white'
+                                    }`}
+                                >
+                                    {f}
+                                    {f === 'pending' && pendingCount > 0 && (
+                                        <span className="ml-2 px-1.5 py-0.5 bg-amber-500 text-white text-xs rounded-full">
+                                            {pendingCount}
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
-            {/* Groups Table */}
-            <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
-                {loading ? (
-                    <div className="flex items-center justify-center h-64">
-                        <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+                    {/* Groups Table */}
+                    <div className="glass-card rounded-2xl overflow-hidden">
+                        {loading ? (
+                            <div className="flex items-center justify-center h-64">
+                                <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+                            </div>
+                        ) : filteredGroups.length === 0 ? (
+                            <div className="text-center py-16 text-white/40">
+                                <Users className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                                <p>No guilds found</p>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-purple-500/10 border-b border-purple-500/20">
+                                        <tr className="text-left text-white/40 text-xs uppercase tracking-wider">
+                                            <th className="px-4 py-4 font-semibold">Guild</th>
+                                            <th className="px-4 py-4 font-semibold">Creator</th>
+                                            <th className="px-4 py-4 font-semibold">Type</th>
+                                            <th className="px-4 py-4 font-semibold">Members</th>
+                                            <th className="px-4 py-4 font-semibold">Status</th>
+                                            <th className="px-4 py-4 font-semibold">Created</th>
+                                            <th className="px-4 py-4 font-semibold">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-white/80">
+                                        {filteredGroups.map((group) => (
+                                            <tr key={group.id} className="border-t border-purple-500/10 hover:bg-purple-500/5 transition-colors">
+                                                <td className="px-4 py-4">
+                                                    <div>
+                                                        <span className="font-semibold text-white flex items-center gap-2">
+                                                            <Star className="w-4 h-4 text-amber-400" />
+                                                            {group.name}
+                                                        </span>
+                                                        {group.description && (
+                                                            <p className="text-xs text-white/40 truncate max-w-xs mt-1">
+                                                                {group.description}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-4 py-4 text-white/50">
+                                                    {group.creator?.display_name || group.creator?.email || 'Unknown'}
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    {group.is_public ? (
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 badge-success rounded-lg text-xs font-bold">
+                                                            <Globe className="w-3 h-3" /> Public
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 badge-warning rounded-lg text-xs font-bold">
+                                                            <Lock className="w-3 h-3" /> Private
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    <span className="flex items-center gap-1.5 text-white/60">
+                                                        <Users className="w-4 h-4" />
+                                                        {group.member_count}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    {group.is_approved ? (
+                                                        <span className="px-3 py-1 badge-success rounded-lg text-xs font-bold">
+                                                            Approved
+                                                        </span>
+                                                    ) : (
+                                                        <span className="px-3 py-1 badge-warning rounded-lg text-xs font-bold">
+                                                            Pending
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td className="px-4 py-4 text-white/40">
+                                                    {new Date(group.created_at).toLocaleDateString()}
+                                                </td>
+                                                <td className="px-4 py-4">
+                                                    <div className="flex items-center gap-1">
+                                                        {!group.is_approved && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleApprove(group.id)}
+                                                                    className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition-all"
+                                                                    title="Approve"
+                                                                >
+                                                                    <Check className="w-4 h-4" />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleReject(group.id)}
+                                                                    className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                                                                    title="Reject"
+                                                                >
+                                                                    <X className="w-4 h-4" />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                        {group.is_approved && (
+                                                            <button
+                                                                onClick={() => handleDelete(group.id)}
+                                                                className="p-2 text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                                                                title="Delete"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
-                ) : filteredGroups.length === 0 ? (
-                    <div className="text-center py-16 text-slate-400">
-                        No guilds found
-                    </div>
-                ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead className="bg-slate-700/50">
-                                <tr className="text-left text-slate-300 text-sm">
-                                    <th className="px-4 py-3 font-medium">Guild</th>
-                                    <th className="px-4 py-3 font-medium">Creator</th>
-                                    <th className="px-4 py-3 font-medium">Type</th>
-                                    <th className="px-4 py-3 font-medium">Members</th>
-                                    <th className="px-4 py-3 font-medium">Status</th>
-                                    <th className="px-4 py-3 font-medium">Created</th>
-                                    <th className="px-4 py-3 font-medium">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody className="text-slate-300">
-                                {filteredGroups.map((group) => (
-                                    <tr key={group.id} className="border-t border-slate-700 hover:bg-slate-700/30">
-                                        <td className="px-4 py-3">
-                                            <div>
-                                                <span className="font-medium text-white">{group.name}</span>
-                                                {group.description && (
-                                                    <p className="text-xs text-slate-400 truncate max-w-xs">
-                                                        {group.description}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-slate-400">
-                                            {group.creator?.display_name || group.creator?.email || 'Unknown'}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            {group.is_public ? (
-                                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">
-                                                    <Globe className="w-3 h-3" /> Public
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs">
-                                                    <Lock className="w-3 h-3" /> Private
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <span className="flex items-center gap-1">
-                                                <Users className="w-4 h-4 text-slate-400" />
-                                                {group.member_count}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            {group.is_approved ? (
-                                                <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-medium">
-                                                    Approved
-                                                </span>
-                                            ) : (
-                                                <span className="px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs font-medium">
-                                                    Pending
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-3 text-slate-400">
-                                            {new Date(group.created_at).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-2">
-                                                {!group.is_approved && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => handleApprove(group.id)}
-                                                            className="p-1.5 text-green-400 hover:bg-green-500/20 rounded transition-colors cursor-pointer"
-                                                            title="Approve"
-                                                        >
-                                                            <Check className="w-4 h-4" />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleReject(group.id)}
-                                                            className="p-1.5 text-red-400 hover:bg-red-500/20 rounded transition-colors cursor-pointer"
-                                                            title="Reject"
-                                                        >
-                                                            <X className="w-4 h-4" />
-                                                        </button>
-                                                    </>
-                                                )}
-                                                {group.is_approved && (
-                                                    <button
-                                                        onClick={() => handleDelete(group.id)}
-                                                        className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
                 </>
             ) : (
                 /* Events Tab */
-                <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+                <div className="glass-card rounded-2xl overflow-hidden">
                     {loading ? (
                         <div className="flex items-center justify-center h-64">
-                            <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+                            <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
                         </div>
                     ) : groupEvents.length === 0 ? (
-                        <div className="text-center py-16 text-slate-400">
-                            No guild events found
+                        <div className="text-center py-16 text-white/40">
+                            <Calendar className="w-12 h-12 mx-auto mb-4 opacity-30" />
+                            <p>No guild events found</p>
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-slate-700/50">
-                                    <tr className="text-left text-slate-300 text-sm">
-                                        <th className="px-4 py-3 font-medium">Event</th>
-                                        <th className="px-4 py-3 font-medium">Guild</th>
-                                        <th className="px-4 py-3 font-medium">Creator</th>
-                                        <th className="px-4 py-3 font-medium">Date</th>
-                                        <th className="px-4 py-3 font-medium">Status</th>
-                                        <th className="px-4 py-3 font-medium">Actions</th>
+                                <thead className="bg-purple-500/10 border-b border-purple-500/20">
+                                    <tr className="text-left text-white/40 text-xs uppercase tracking-wider">
+                                        <th className="px-4 py-4 font-semibold">Event</th>
+                                        <th className="px-4 py-4 font-semibold">Guild</th>
+                                        <th className="px-4 py-4 font-semibold">Creator</th>
+                                        <th className="px-4 py-4 font-semibold">Date</th>
+                                        <th className="px-4 py-4 font-semibold">Status</th>
+                                        <th className="px-4 py-4 font-semibold">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="text-slate-300">
+                                <tbody className="text-white/80">
                                     {groupEvents.map((event) => (
-                                        <tr key={event.id} className="border-t border-slate-700 hover:bg-slate-700/30">
-                                            <td className="px-4 py-3">
+                                        <tr key={event.id} className="border-t border-purple-500/10 hover:bg-purple-500/5 transition-colors">
+                                            <td className="px-4 py-4">
                                                 <div>
-                                                    <span className="font-medium text-white">{event.title}</span>
-                                                    <p className="text-xs text-slate-400">{event.location}</p>
+                                                    <span className="font-semibold text-white">{event.title}</span>
+                                                    <p className="text-xs text-white/40">{event.location}</p>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-3 text-slate-400">
+                                            <td className="px-4 py-4 text-white/50">
                                                 {event.group?.name || 'Unknown'}
                                             </td>
-                                            <td className="px-4 py-3 text-slate-400">
+                                            <td className="px-4 py-4 text-white/50">
                                                 {event.creator?.display_name || event.creator?.email || 'Unknown'}
                                             </td>
-                                            <td className="px-4 py-3 text-slate-400">
+                                            <td className="px-4 py-4 text-white/40">
                                                 {new Date(event.event_date).toLocaleDateString()}
                                             </td>
-                                            <td className="px-4 py-3">
+                                            <td className="px-4 py-4">
                                                 {event.is_approved ? (
-                                                    <span className="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs font-medium">
+                                                    <span className="px-3 py-1 badge-success rounded-lg text-xs font-bold">
                                                         Approved
                                                     </span>
                                                 ) : (
-                                                    <span className="px-2 py-1 bg-amber-500/20 text-amber-400 rounded text-xs font-medium">
+                                                    <span className="px-3 py-1 badge-warning rounded-lg text-xs font-bold">
                                                         Pending
                                                     </span>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-2">
+                                            <td className="px-4 py-4">
+                                                <div className="flex items-center gap-1">
                                                     {!event.is_approved && (
                                                         <>
                                                             <button
                                                                 onClick={() => handleApproveEvent(event.id)}
-                                                                className="p-1.5 text-green-400 hover:bg-green-500/20 rounded transition-colors cursor-pointer"
+                                                                className="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition-all"
                                                                 title="Approve"
                                                             >
                                                                 <Check className="w-4 h-4" />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleRejectEvent(event.id)}
-                                                                className="p-1.5 text-red-400 hover:bg-red-500/20 rounded transition-colors cursor-pointer"
+                                                                className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                                                                 title="Reject"
                                                             >
                                                                 <X className="w-4 h-4" />
@@ -419,7 +440,7 @@ export function GroupsPage() {
                                                     {event.is_approved && (
                                                         <button
                                                             onClick={() => handleRejectEvent(event.id)}
-                                                            className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors cursor-pointer"
+                                                            className="p-2 text-white/40 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                                                             title="Delete"
                                                         >
                                                             <Trash2 className="w-4 h-4" />

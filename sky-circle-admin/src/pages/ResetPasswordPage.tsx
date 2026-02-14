@@ -1,39 +1,29 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Moon, Lock, Eye, EyeOff, Loader2, CheckCircle, AlertCircle } from 'lucide-react'
+import { Loader2, Sparkles, Lock, CheckCircle, AlertCircle } from 'lucide-react'
 
 interface ResetPasswordPageProps {
     onComplete: () => void
 }
 
+// Generate random stars
+function generateStars(count: number) {
+    return Array.from({ length: count }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        delay: Math.random() * 3,
+        size: Math.random() * 2 + 1
+    }))
+}
+
 export function ResetPasswordPage({ onComplete }: ResetPasswordPageProps) {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
-    const [showPassword, setShowPassword] = useState(false)
-    const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
     const [success, setSuccess] = useState(false)
-    const [isValidSession, setIsValidSession] = useState(false)
-    const [checking, setChecking] = useState(true)
-
-    useEffect(() => {
-        // Check if we have a valid recovery session
-        const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession()
-            setIsValidSession(!!session)
-            setChecking(false)
-        }
-        checkSession()
-
-        // Listen for auth state changes (recovery link clicked)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-            if (event === 'PASSWORD_RECOVERY') {
-                setIsValidSession(true)
-            }
-        })
-
-        return () => subscription.unsubscribe()
-    }, [])
+    const [error, setError] = useState('')
+    const [stars] = useState(() => generateStars(100))
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -49,153 +39,133 @@ export function ResetPasswordPage({ onComplete }: ResetPasswordPageProps) {
             return
         }
 
-        setIsLoading(true)
+        setLoading(true)
 
         try {
             const { error } = await supabase.auth.updateUser({ password })
+
             if (error) throw error
             setSuccess(true)
-            setTimeout(() => {
-                onComplete()
-            }, 2000)
         } catch (err: any) {
             setError(err.message || 'Failed to reset password')
         } finally {
-            setIsLoading(false)
+            setLoading(false)
         }
     }
 
-    if (checking) {
-        return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-            </div>
-        )
-    }
-
-    if (!isValidSession) {
-        return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-                <div className="w-full max-w-md">
-                    <div className="bg-slate-800 rounded-2xl p-8 border border-slate-700 text-center">
-                        <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <AlertCircle className="w-8 h-8 text-red-400" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-white mb-2">Invalid or Expired Link</h2>
-                        <p className="text-slate-400 mb-6">
-                            This password reset link is invalid or has expired. Please request a new one.
-                        </p>
-                        <button
-                            onClick={onComplete}
-                            className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg cursor-pointer"
-                        >
-                            Back to Login
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
-    if (success) {
-        return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-                <div className="w-full max-w-md">
-                    <div className="bg-slate-800 rounded-2xl p-8 border border-slate-700 text-center">
-                        <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <CheckCircle className="w-8 h-8 text-green-400" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-white mb-2">Password Reset!</h2>
-                        <p className="text-slate-400">
-                            Your password has been successfully reset. Redirecting to login...
-                        </p>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
     return (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
+        <div className="min-h-screen nebula-bg flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Animated Stars */}
+            <div className="fixed inset-0 pointer-events-none">
+                {stars.map(star => (
+                    <div
+                        key={star.id}
+                        className="star"
+                        style={{
+                            left: `${star.left}%`,
+                            top: `${star.top}%`,
+                            width: `${star.size}px`,
+                            height: `${star.size}px`,
+                            animationDelay: `${star.delay}s`
+                        }}
+                    />
+                ))}
+            </div>
+
+            {/* Nebula Glow Effects */}
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-[100px] animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/15 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+
+            <div className="w-full max-w-md relative z-10">
+                {/* Logo */}
                 <div className="text-center mb-8">
-                    <div className="flex items-center justify-center gap-2 mb-4">
-                        <Moon className="w-10 h-10 text-indigo-400" />
-                        <span className="text-2xl font-bold text-white">Sky Circle</span>
+                    <div className="inline-flex items-center justify-center mb-4 relative">
+                        <Sparkles className="w-16 h-16 text-purple-400" />
+                        <div className="absolute inset-0 blur-2xl bg-purple-500/40" />
                     </div>
-                    <p className="text-slate-400">Admin Panel - Set New Password</p>
+                    <h1 className="text-4xl font-black text-gradient mb-2">SkyGuild</h1>
+                    <p className="text-white/40 font-bold tracking-widest text-xs uppercase">Admin Control Center</p>
                 </div>
 
-                <div className="bg-slate-800 rounded-2xl p-8 border border-slate-700">
-                    <h2 className="text-xl font-bold text-white mb-2">Create New Password</h2>
-                    <p className="text-slate-400 text-sm mb-6">
-                        Enter your new password below.
-                    </p>
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        {error && (
-                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-                                {error}
+                {/* Card */}
+                <div className="glass-card rounded-3xl p-8">
+                    {success ? (
+                        <div className="text-center">
+                            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <CheckCircle className="w-8 h-8 text-green-400" />
                             </div>
-                        )}
-
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">
-                                New Password
-                            </label>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                    minLength={6}
-                                    placeholder="••••••••"
-                                    className="w-full pl-10 pr-12 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white cursor-pointer"
-                                >
-                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                </button>
-                            </div>
+                            <h2 className="text-2xl font-bold text-white mb-2">Password Updated</h2>
+                            <p className="text-white/50 mb-6">
+                                Your password has been successfully reset. You can now sign in with your new password.
+                            </p>
+                            <button
+                                onClick={onComplete}
+                                className="w-full py-4 btn-cosmic rounded-xl font-bold text-white"
+                            >
+                                Continue to Login
+                            </button>
                         </div>
+                    ) : (
+                        <>
+                            <h2 className="text-2xl font-bold text-white mb-2">Set New Password</h2>
+                            <p className="text-white/40 mb-6">Enter your new password below</p>
 
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">
-                                Confirm Password
-                            </label>
-                            <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    required
-                                    placeholder="••••••••"
-                                    className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                />
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-600/50 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                    Resetting...
-                                </>
-                            ) : (
-                                'Reset Password'
+                            {error && (
+                                <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-3">
+                                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                                    <p className="text-red-400 text-sm">{error}</p>
+                                </div>
                             )}
-                        </button>
-                    </form>
+
+                            <form onSubmit={handleSubmit} className="space-y-5">
+                                <div>
+                                    <label className="block text-sm font-medium text-white/60 mb-2">New Password</label>
+                                    <div className="relative">
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+                                        <input
+                                            type="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="w-full pl-12 pr-4 py-3.5 glass-input rounded-xl text-white placeholder-white/30"
+                                            placeholder="••••••••"
+                                            required
+                                            minLength={6}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-white/60 mb-2">Confirm Password</label>
+                                    <div className="relative">
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+                                        <input
+                                            type="password"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            className="w-full pl-12 pr-4 py-3.5 glass-input rounded-xl text-white placeholder-white/30"
+                                            placeholder="••••••••"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full py-4 btn-cosmic rounded-xl font-bold text-white disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            Updating...
+                                        </>
+                                    ) : (
+                                        'Update Password'
+                                    )}
+                                </button>
+                            </form>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

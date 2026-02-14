@@ -1,21 +1,33 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Moon, Mail, ArrowLeft, Loader2, CheckCircle } from 'lucide-react'
+import { Loader2, Sparkles, Mail, ArrowLeft, CheckCircle } from 'lucide-react'
 
 interface ForgotPasswordPageProps {
     onBack: () => void
 }
 
+// Generate random stars
+function generateStars(count: number) {
+    return Array.from({ length: count }, (_, i) => ({
+        id: i,
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        delay: Math.random() * 3,
+        size: Math.random() * 2 + 1
+    }))
+}
+
 export function ForgotPasswordPage({ onBack }: ForgotPasswordPageProps) {
     const [email, setEmail] = useState('')
-    const [isLoading, setIsLoading] = useState(false)
+    const [loading, setLoading] = useState(false)
+    const [sent, setSent] = useState(false)
     const [error, setError] = useState('')
-    const [success, setSuccess] = useState(false)
+    const [stars] = useState(() => generateStars(100))
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setError('')
-        setIsLoading(true)
+        setLoading(true)
 
         try {
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -23,105 +35,118 @@ export function ForgotPasswordPage({ onBack }: ForgotPasswordPageProps) {
             })
 
             if (error) throw error
-            setSuccess(true)
+            setSent(true)
         } catch (err: any) {
             setError(err.message || 'Failed to send reset email')
         } finally {
-            setIsLoading(false)
+            setLoading(false)
         }
     }
 
-    if (success) {
-        return (
-            <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-                <div className="w-full max-w-md">
-                    <div className="bg-slate-800 rounded-2xl p-8 border border-slate-700 text-center">
-                        <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <CheckCircle className="w-8 h-8 text-green-400" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-white mb-2">Check Your Email</h2>
-                        <p className="text-slate-400 mb-6">
-                            We've sent a password reset link to <span className="text-white">{email}</span>
-                        </p>
-                        <p className="text-sm text-slate-500 mb-6">
-                            Didn't receive the email? Check your spam folder or try again.
-                        </p>
-                        <button
-                            onClick={onBack}
-                            className="text-indigo-400 hover:text-indigo-300 font-medium cursor-pointer"
-                        >
-                            Back to Login
-                        </button>
-                    </div>
-                </div>
-            </div>
-        )
-    }
-
     return (
-        <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
+        <div className="min-h-screen nebula-bg flex items-center justify-center p-4 relative overflow-hidden">
+            {/* Animated Stars */}
+            <div className="fixed inset-0 pointer-events-none">
+                {stars.map(star => (
+                    <div
+                        key={star.id}
+                        className="star"
+                        style={{
+                            left: `${star.left}%`,
+                            top: `${star.top}%`,
+                            width: `${star.size}px`,
+                            height: `${star.size}px`,
+                            animationDelay: `${star.delay}s`
+                        }}
+                    />
+                ))}
+            </div>
+
+            {/* Nebula Glow Effects */}
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-[100px] animate-pulse" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/15 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+
+            <div className="w-full max-w-md relative z-10">
+                {/* Logo */}
                 <div className="text-center mb-8">
-                    <div className="flex items-center justify-center gap-2 mb-4">
-                        <Moon className="w-10 h-10 text-indigo-400" />
-                        <span className="text-2xl font-bold text-white">Sky Circle</span>
+                    <div className="inline-flex items-center justify-center mb-4 relative">
+                        <Sparkles className="w-16 h-16 text-purple-400" />
+                        <div className="absolute inset-0 blur-2xl bg-purple-500/40" />
                     </div>
-                    <p className="text-slate-400">Admin Panel - Reset Password</p>
+                    <h1 className="text-4xl font-black text-gradient mb-2">SkyGuild</h1>
+                    <p className="text-white/40 font-bold tracking-widest text-xs uppercase">Admin Control Center</p>
                 </div>
 
-                <div className="bg-slate-800 rounded-2xl p-8 border border-slate-700">
-                    <button
-                        onClick={onBack}
-                        className="flex items-center gap-2 text-slate-400 hover:text-white mb-6 cursor-pointer"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Login
-                    </button>
-
-                    <h2 className="text-xl font-bold text-white mb-2">Forgot Password?</h2>
-                    <p className="text-slate-400 text-sm mb-6">
-                        Enter your email address and we'll send you a link to reset your password.
-                    </p>
-
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        {error && (
-                            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
-                                {error}
+                {/* Card */}
+                <div className="glass-card rounded-3xl p-8">
+                    {sent ? (
+                        <div className="text-center">
+                            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <CheckCircle className="w-8 h-8 text-green-400" />
                             </div>
-                        )}
-
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-1">
-                                Email Address
-                            </label>
-                            <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                    placeholder="admin@example.com"
-                                    className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                />
-                            </div>
+                            <h2 className="text-2xl font-bold text-white mb-2">Check Your Email</h2>
+                            <p className="text-white/50 mb-6">
+                                We've sent a password reset link to <span className="text-purple-400">{email}</span>
+                            </p>
+                            <button
+                                onClick={onBack}
+                                className="w-full py-3 btn-cosmic rounded-xl font-bold text-white"
+                            >
+                                Return to Login
+                            </button>
                         </div>
+                    ) : (
+                        <>
+                            <button
+                                onClick={onBack}
+                                className="flex items-center gap-2 text-white/50 hover:text-white mb-6 transition-colors"
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                Back to login
+                            </button>
 
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-600/50 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:cursor-not-allowed"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <Loader2 className="w-5 h-5 animate-spin" />
-                                    Sending...
-                                </>
-                            ) : (
-                                'Send Reset Link'
+                            <h2 className="text-2xl font-bold text-white mb-2">Reset Password</h2>
+                            <p className="text-white/40 mb-6">Enter your email to receive a reset link</p>
+
+                            {error && (
+                                <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/30">
+                                    <p className="text-red-400 text-sm">{error}</p>
+                                </div>
                             )}
-                        </button>
-                    </form>
+
+                            <form onSubmit={handleSubmit} className="space-y-5">
+                                <div>
+                                    <label className="block text-sm font-medium text-white/60 mb-2">Email Address</label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
+                                        <input
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="w-full pl-12 pr-4 py-3.5 glass-input rounded-xl text-white placeholder-white/30"
+                                            placeholder="admin@skyguild.com"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full py-4 btn-cosmic rounded-xl font-bold text-white disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                            Sending...
+                                        </>
+                                    ) : (
+                                        'Send Reset Link'
+                                    )}
+                                </button>
+                            </form>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

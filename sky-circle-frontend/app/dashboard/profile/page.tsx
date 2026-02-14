@@ -163,21 +163,23 @@ export default function ProfilePage() {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('Not authenticated')
 
-            const fileExt = file.name.split('.').pop()
+            const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg'
             const fileName = `${user.id}-${Date.now()}.${fileExt}`
-            const filePath = `profile-photos/${fileName}`
 
-            // Upload to Supabase Storage
+            // Upload to Supabase Storage (directly to bucket root)
             const { error: uploadError } = await supabase.storage
                 .from('avatars')
-                .upload(filePath, file, { upsert: true })
+                .upload(fileName, file, { 
+                    upsert: true,
+                    contentType: file.type
+                })
 
             if (uploadError) throw uploadError
 
             // Get public URL
             const { data: { publicUrl } } = supabase.storage
                 .from('avatars')
-                .getPublicUrl(filePath)
+                .getPublicUrl(fileName)
 
             // Update user profile
             const { error: updateError } = await supabase
@@ -189,6 +191,7 @@ export default function ProfilePage() {
 
             setProfile({ ...profile!, profile_photo_url: publicUrl })
         } catch (error: any) {
+            console.error('Upload error:', error)
             alert('Failed to upload photo: ' + error.message)
         } finally {
             setUploadingPhoto(false)

@@ -16,6 +16,7 @@ import { GroupsPage } from './pages/GroupsPage'
 import { ApplicationsPage } from './pages/ApplicationsPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
+import { FeedbackPage } from './pages/FeedbackPage'
 import { Loader2 } from 'lucide-react'
 
 function AuthWrapper({ children }: { children: React.ReactNode }) {
@@ -139,6 +140,11 @@ function AppRoutes() {
                 <Route path="/applications" element={
                     <Layout currentPage="applications" onNavigate={handleNavigate}>
                         <ApplicationsPage />
+                    </Layout>
+                } />
+                <Route path="/feedback" element={
+                    <Layout currentPage="feedback" onNavigate={handleNavigate}>
+                        <FeedbackPage />
                     </Layout>
                 } />
 
