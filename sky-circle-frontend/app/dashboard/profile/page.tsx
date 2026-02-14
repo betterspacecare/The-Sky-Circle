@@ -164,9 +164,10 @@ export default function ProfilePage() {
             if (!user) throw new Error('Not authenticated')
 
             const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-            const fileName = `${user.id}-${Date.now()}.${fileExt}`
+            // Store in user-specific folder: {user_id}/avatar.{ext}
+            const fileName = `${user.id}/avatar-${Date.now()}.${fileExt}`
 
-            // Upload to Supabase Storage (directly to bucket root)
+            // Upload to Supabase Storage
             const { error: uploadError } = await supabase.storage
                 .from('avatars')
                 .upload(fileName, file, { 

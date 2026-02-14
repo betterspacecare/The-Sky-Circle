@@ -1,7 +1,23 @@
+'use client'
+
+import { Suspense, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Telescope, Star, Users, Trophy, Calendar, Eye } from 'lucide-react'
 
-export default function Home() {
+function HomeContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Check if this is a password reset redirect (has code param)
+    const code = searchParams.get('code')
+    if (code) {
+      // Redirect to reset-password page with the code
+      router.replace(`/reset-password?code=${code}`)
+    }
+  }, [searchParams, router])
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -164,3 +180,10 @@ export default function Home() {
   )
 }
 
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <HomeContent />
+    </Suspense>
+  )
+}
