@@ -27,11 +27,11 @@ export default function LoginPage() {
 
             if (error) throw error
 
-            router.push('/dashboard')
-            router.refresh()
+            // Force a hard navigation to sync cookies with server
+            window.location.href = '/dashboard'
         } catch (err: any) {
+            console.error('Login error:', err)
             setError(err.message || 'Failed to sign in')
-        } finally {
             setLoading(false)
         }
     }

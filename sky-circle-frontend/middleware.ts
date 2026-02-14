@@ -27,30 +27,8 @@ export async function middleware(request: NextRequest) {
         }
     )
 
-    // Refresh session if expired - this is important for server components
-    // Don't use getSession() as it doesn't refresh the token
-    const { data: { user }, error } = await supabase.auth.getUser()
-
-    // If there's an auth error (like invalid refresh token), clear cookies
-    if (error && error.message?.includes('Refresh Token')) {
-        // Clear auth cookies
-        supabaseResponse.cookies.delete('sb-access-token')
-        supabaseResponse.cookies.delete('sb-refresh-token')
-    }
-
-    // Redirect to login if accessing protected routes without auth
-    if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/login'
-        return NextResponse.redirect(url)
-    }
-
-    // Redirect to dashboard if already logged in and accessing auth pages
-    if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
-        const url = request.nextUrl.clone()
-        url.pathname = '/dashboard'
-        return NextResponse.redirect(url)
-    }
+    // Refresh session - required for Server Components
+    await supabase.auth.getUser()
 
     return supabaseResponse
 }
