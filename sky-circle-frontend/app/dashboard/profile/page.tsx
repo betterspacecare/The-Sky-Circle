@@ -2,9 +2,18 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { User, Camera, Trophy, Star, MapPin, Telescope, Edit3, Loader2, LogOut, Shield, CheckCircle2, Clock } from 'lucide-react'
+import { User, Camera, Trophy, Star, MapPin, Telescope, Edit3, Loader2, LogOut, Shield, CheckCircle2, Clock, Eye, MessageSquare, Heart } from 'lucide-react'
 import { EXPERIENCE_LEVELS } from '@/lib/constants'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import GearsList from '@/components/profile/GearsList'
+import FollowStats from '@/components/social/FollowStats'
+import InterestsTags from '@/components/social/InterestsTags'
+import InterestsSelector from '@/components/social/InterestsSelector'
+import { fetchUserGears } from '@/lib/services/gearService'
+import { getFollowCounts } from '@/lib/services/followService'
+import { fetchAllInterests, fetchUserInterests, updateUserInterests } from '@/lib/services/interestsService'
+import { UserGear, Interest } from '@/types/social.types'
 
 interface UserProfile {
     id: string
@@ -20,6 +29,25 @@ interface UserProfile {
     guild_leader_application_status: string | null
 }
 
+interface Observation {
+    id: string
+    object_name: string
+    category: string
+    notes: string | null
+    photo_url: string | null
+    observation_date: string
+    created_at: string
+}
+
+interface Post {
+    id: string
+    caption: string | null
+    image_url: string
+    created_at: string
+    likes_count: number
+    comments_count: number
+}
+
 export default function ProfilePage() {
     const supabase = createClient()
     const router = useRouter()
@@ -33,6 +61,24 @@ export default function ProfilePage() {
     const [showApplicationModal, setShowApplicationModal] = useState(false)
     const [uploadingPhoto, setUploadingPhoto] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [gears, setGears] = useState<UserGear[]>([])
+    const [gearsLoading, setGearsLoading] = useState(true)
+    
+    // Follow system state (Requirement 3.4)
+    const [followerCount, setFollowerCount] = useState(0)
+    const [followingCount, setFollowingCount] = useState(0)
+
+    // Interests system state (Requirements 5.1, 5.3, 5.6)
+    const [interests, setInterests] = useState<Interest[]>([])
+    const [allInterests, setAllInterests] = useState<Interest[]>([])
+    const [selectedInterestIds, setSelectedInterestIds] = useState<string[]>([])
+    const [interestsLoading, setInterestsLoading] = useState(true)
+
+    // User content state
+    const [observations, setObservations] = useState<Observation[]>([])
+    const [observationsLoading, setObservationsLoading] = useState(true)
+    const [posts, setPosts] = useState<Post[]>([])
+    const [postsLoading, setPostsLoading] = useState(true)
 
     const [editForm, setEditForm] = useState({
         display_name: '',
@@ -45,6 +91,53 @@ export default function ProfilePage() {
         fetchProfile()
     }, [])
 
+    // Set up realtime subscription for follow count updates
+    useEffect(() => {
+        if (!profile?.id) return
+
+        const channel = supabase
+            .channel(`own-profile-follows-${profile.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'follows',
+                    filter: `following_id=eq.${profile.id}`,
+                },
+                async () => {
+                    // Refetch follower count when someone follows/unfollows this user
+                    const countsResult = await getFollowCounts(profile.id)
+                    if (countsResult.data) {
+                        setFollowerCount(countsResult.data.followerCount)
+                        setFollowingCount(countsResult.data.followingCount)
+                    }
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'follows',
+                    filter: `follower_id=eq.${profile.id}`,
+                },
+                async () => {
+                    // Refetch following count when this user follows/unfollows someone
+                    const countsResult = await getFollowCounts(profile.id)
+                    if (countsResult.data) {
+                        setFollowerCount(countsResult.data.followerCount)
+                        setFollowingCount(countsResult.data.followingCount)
+                    }
+                }
+            )
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [profile?.id, supabase])
+
     const fetchProfile = async () => {
         try {
             const { data: { user } } = await supabase.auth.getUser()
@@ -54,9 +147,18 @@ export default function ProfilePage() {
                 .from('users')
                 .select('*')
                 .eq('id', user.id)
-                .single()
+                .maybeSingle()
 
             if (error) throw error
+            
+            // Handle case where user doesn't exist in users table yet
+            if (!data) {
+                // Redirect to profile setup page
+                console.warn('User profile not found, redirecting to setup')
+                router.push('/setup-profile')
+                return
+            }
+            
             setProfile(data)
             setEditForm({
                 display_name: data.display_name || '',
@@ -72,6 +174,75 @@ export default function ProfilePage() {
                 .eq('user_id', user.id)
 
             setBadges(badgeData || [])
+
+            // Fetch gears
+            setGearsLoading(true)
+            const gearsResult = await fetchUserGears(user.id)
+            if (gearsResult.data) {
+                setGears(gearsResult.data)
+            }
+            setGearsLoading(false)
+            
+            // Fetch follow counts (Requirement 3.4)
+            const countsResult = await getFollowCounts(user.id)
+            if (countsResult.data) {
+                setFollowerCount(countsResult.data.followerCount)
+                setFollowingCount(countsResult.data.followingCount)
+            }
+
+            // Fetch interests (Requirements 5.1, 5.6)
+            setInterestsLoading(true)
+            const [allInterestsResult, userInterestsResult] = await Promise.all([
+                fetchAllInterests(),
+                fetchUserInterests(user.id)
+            ])
+            if (allInterestsResult.data) {
+                setAllInterests(allInterestsResult.data)
+            }
+            if (userInterestsResult.data) {
+                setInterests(userInterestsResult.data)
+                setSelectedInterestIds(userInterestsResult.data.map(i => i.id))
+            }
+            setInterestsLoading(false)
+
+            // Fetch recent observations
+            setObservationsLoading(true)
+            const { data: observationsData } = await supabase
+                .from('observations')
+                .select('id, object_name, category, notes, photo_url, observation_date, created_at')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(6)
+            
+            if (observationsData) {
+                setObservations(observationsData)
+            }
+            setObservationsLoading(false)
+
+            // Fetch recent posts
+            setPostsLoading(true)
+            const { data: postsData } = await supabase
+                .from('posts')
+                .select('id, caption, image_url, created_at')
+                .eq('user_id', user.id)
+                .eq('is_deleted', false)
+                .order('created_at', { ascending: false })
+                .limit(6)
+            
+            if (postsData) {
+                // Get likes and comments counts for posts
+                const postsWithCounts = await Promise.all(
+                    postsData.map(async (post) => {
+                        const [{ count: likesCount }, { count: commentsCount }] = await Promise.all([
+                            supabase.from('likes').select('*', { count: 'exact', head: true }).eq('post_id', post.id),
+                            supabase.from('comments').select('*', { count: 'exact', head: true }).eq('post_id', post.id)
+                        ])
+                        return { ...post, likes_count: likesCount || 0, comments_count: commentsCount || 0 }
+                    })
+                )
+                setPosts(postsWithCounts)
+            }
+            setPostsLoading(false)
         } catch (error: any) {
             console.error('Error fetching profile:', error.message)
         } finally {
@@ -91,6 +262,16 @@ export default function ProfilePage() {
                 .eq('id', user.id)
 
             if (error) throw error
+
+            // Save interests (Requirement 5.3)
+            const interestsResult = await updateUserInterests(user.id, selectedInterestIds)
+            if (interestsResult.error) {
+                throw new Error(interestsResult.error)
+            }
+            if (interestsResult.data) {
+                setInterests(interestsResult.data)
+            }
+
             setProfile({ ...profile!, ...editForm })
             setEditing(false)
         } catch (error: any) {
@@ -199,34 +380,73 @@ export default function ProfilePage() {
         }
     }
 
+    // Gear CRUD handlers
+    const handleGearAdded = (gear: UserGear) => {
+        setGears(prev => [gear, ...prev])
+    }
+
+    const handleGearUpdated = (updatedGear: UserGear) => {
+        setGears(prev => prev.map(g => g.id === updatedGear.id ? updatedGear : g))
+    }
+
+    const handleGearDeleted = (gearId: string) => {
+        setGears(prev => prev.filter(g => g.id !== gearId))
+    }
+
+    // Interest selection handler (Requirement 5.1)
+    const handleInterestSelectionChange = (newSelectedIds: string[]) => {
+        setSelectedInterestIds(newSelectedIds)
+    }
+
+    // Reset interests when canceling edit
+    const handleCancelEdit = () => {
+        setEditing(false)
+        // Reset selected interests to current saved interests
+        setSelectedInterestIds(interests.map(i => i.id))
+    }
+
     if (loading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
             <Loader2 className="w-10 h-10 text-cosmic-purple animate-spin" />
         </div>
     )
 
-    if (!profile) return null
+    if (!profile) return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6">
+            <div className="text-center">
+                <h2 className="text-xl font-bold mb-2">Profile Not Found</h2>
+                <p className="text-white/60 mb-4">Your user profile hasn't been set up yet.</p>
+                <p className="text-white/40 text-sm">Please complete the profile setup process or contact support.</p>
+            </div>
+            <button 
+                onClick={() => window.location.href = '/setup-profile'}
+                className="px-6 py-3 bg-gradient-to-r from-cosmic-purple to-cosmic-blue rounded-xl font-bold hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] transition-all"
+            >
+                Set Up Profile
+            </button>
+        </div>
+    )
 
     return (
-        <div className="py-0">
+        <div className="py-4">
             {/* Header Card */}
-            <div className="glass-effect rounded-2xl sm:rounded-[2rem] overflow-hidden mb-6 sm:mb-8">
-                {/* Banner */}
-                <div className="relative h-24 sm:h-32">
+            <div className="glass-effect rounded-2xl sm:rounded-[2rem] overflow-hidden mb-8 sm:mb-10">
+                {/* Banner - taller for better visual impact */}
+                <div className="relative h-32 sm:h-40">
                     <div className="absolute inset-0 bg-gradient-to-r from-cosmic-purple/60 via-cosmic-blue/40 to-cosmic-pink/60" />
                     <div className="absolute inset-0 bg-[#0a0e27] starfield opacity-50" />
                     
                     {/* Action buttons on banner */}
-                    <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-10 flex gap-2">
+                    <div className="absolute top-4 sm:top-5 right-4 sm:right-5 z-10 flex gap-3">
                         <button
-                            onClick={() => setEditing(!editing)}
-                            className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/10 backdrop-blur-md rounded-lg text-xs sm:text-sm font-medium flex items-center gap-1.5 border border-white/20 hover:bg-white/20 transition-all"
+                            onClick={() => editing ? handleCancelEdit() : setEditing(true)}
+                            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-white/10 backdrop-blur-md rounded-xl text-xs sm:text-sm font-medium flex items-center gap-2 border border-white/20 hover:bg-white/20 transition-all"
                         >
-                            {editing ? 'Cancel' : <><Edit3 className="w-3.5 h-3.5" /> Edit</>}
+                            {editing ? 'Cancel' : <><Edit3 className="w-4 h-4" /> Edit</>}
                         </button>
                         <button
                             onClick={handleSignOut}
-                            className="p-1.5 sm:p-2 bg-red-500/20 backdrop-blur-md rounded-lg text-red-400 border border-red-500/20 hover:bg-red-500/30 transition-all"
+                            className="p-2 sm:p-2.5 bg-red-500/20 backdrop-blur-md rounded-xl text-red-400 border border-red-500/20 hover:bg-red-500/30 transition-all"
                             title="Sign out"
                         >
                             <LogOut className="w-4 h-4" />
@@ -235,16 +455,16 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Profile Info Section */}
-                <div className="relative px-4 sm:px-6 pb-5 sm:pb-6">
-                    {/* Profile Photo - positioned to overlap banner */}
-                    <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-10 sm:-mt-12">
+                <div className="relative px-5 sm:px-8 pb-6 sm:pb-8">
+                    {/* Profile Photo - overlaps banner */}
+                    <div className="flex items-start gap-5 sm:gap-6 -mt-12 sm:-mt-16">
                         <div className="relative shrink-0">
-                            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-4 border-[#0a0e17] overflow-hidden bg-white/5 shadow-xl">
+                            <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl border-4 border-[#0a0e17] overflow-hidden bg-white/5 shadow-2xl">
                                 {profile.profile_photo_url ? (
                                     <img src={profile.profile_photo_url} className="w-full h-full object-cover" alt="" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-cosmic-purple/20 to-cosmic-blue/20">
-                                        <User className="w-10 h-10 sm:w-12 sm:h-12 text-white/30" />
+                                        <User className="w-12 h-12 sm:w-14 sm:h-14 text-white/30" />
                                     </div>
                                 )}
                                 {uploadingPhoto && (
@@ -263,48 +483,88 @@ export default function ProfilePage() {
                             <button 
                                 onClick={() => fileInputRef.current?.click()}
                                 disabled={uploadingPhoto}
-                                className="absolute -bottom-1 -right-1 p-1.5 bg-cosmic-purple rounded-lg text-white shadow-lg hover:bg-cosmic-purple/80 active:scale-90 transition-all disabled:opacity-50"
+                                className="absolute -bottom-2 -right-2 p-2 bg-cosmic-purple rounded-xl text-white shadow-lg hover:bg-cosmic-purple/80 active:scale-90 transition-all disabled:opacity-50"
                             >
-                                <Camera className="w-3.5 h-3.5" />
+                                <Camera className="w-4 h-4" />
                             </button>
                         </div>
 
-                        {/* Name and quick stats */}
-                        <div className="flex-1 min-w-0 sm:pb-1">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                        {/* Name and quick stats - with top padding to create gap from banner */}
+                        <div className="flex-1 min-w-0 pt-14 sm:pt-20">
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6">
                                 <div className="min-w-0">
-                                    <h1 className="text-xl sm:text-2xl font-black truncate">{profile.display_name || 'Cosmic Traveler'}</h1>
-                                    <p className="text-cosmic-purple font-medium text-sm">@{profile.id.substring(0, 8)}</p>
+                                    <h1 className="text-2xl sm:text-3xl font-black truncate mb-1">{profile.display_name || 'Cosmic Traveler'}</h1>
+                                    <p className="text-cosmic-purple font-medium text-sm sm:text-base mb-3">@{profile.id.substring(0, 8)}</p>
+                                    
+                                    {/* Badges inline below name */}
+                                    {badges.length > 0 && (
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                            {badges.slice(0, 5).map(b => (
+                                                <div key={b.id} className="group relative">
+                                                    <div className="w-7 h-7 rounded-lg glass-gold flex items-center justify-center cursor-help hover:scale-110 transition-all">
+                                                        <Star className="w-4 h-4 text-cosmic-gold fill-cosmic-gold" />
+                                                    </div>
+                                                    <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-white text-black px-2 py-1 rounded-lg text-[9px] font-medium opacity-0 group-hover:opacity-100 transition-all z-30 pointer-events-none shadow-xl whitespace-nowrap">
+                                                        {b.badges?.name}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                            {badges.length > 5 && (
+                                                <span className="text-xs text-white/40 ml-1">+{badges.length - 5} more</span>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                                 
                                 {/* Quick stats inline */}
-                                <div className="flex items-center gap-3 sm:gap-4">
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 glass-inner rounded-lg">
-                                        <Star className="w-4 h-4 text-cosmic-gold fill-cosmic-gold" />
-                                        <span className="font-bold text-sm">{profile.total_points.toLocaleString()}</span>
+                                <div className="flex items-center gap-4 sm:gap-5">
+                                    <div className="flex items-center gap-2 px-4 py-2.5 glass-inner rounded-xl">
+                                        <Star className="w-5 h-5 text-cosmic-gold fill-cosmic-gold" />
+                                        <span className="font-bold text-base">{profile.total_points.toLocaleString()}</span>
                                     </div>
-                                    <div className="flex items-center gap-1.5 px-3 py-1.5 glass-inner rounded-lg">
-                                        <Trophy className="w-4 h-4 text-cosmic-purple" />
-                                        <span className="font-bold text-sm">Lvl {profile.level}</span>
+                                    <div className="flex items-center gap-2 px-4 py-2.5 glass-inner rounded-xl">
+                                        <Trophy className="w-5 h-5 text-cosmic-purple" />
+                                        <span className="font-bold text-base">Lvl {profile.level}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
+                    {/* Follow Stats Section (Requirement 3.4) */}
+                    <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-white/10">
+                        <FollowStats
+                            userId={profile.id}
+                            followerCount={followerCount}
+                            followingCount={followingCount}
+                        />
+                    </div>
+
                     {/* Bio and tags */}
-                    <div className="mt-4 pt-4 border-t border-white/5">
-                        <p className="text-sm text-white/60 mb-3">{profile.bio || 'This observer hasn\'t written a bio yet.'}</p>
-                        <div className="flex flex-wrap gap-2">
-                            <div className="px-2.5 py-1 glass-inner rounded-full text-xs font-medium text-white/50 flex items-center gap-1.5">
-                                <Telescope className="w-3 h-3" />
+                    <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-white/10">
+                        <p className="text-sm sm:text-base text-white/60 mb-4 leading-relaxed">{profile.bio || 'This observer hasn\'t written a bio yet.'}</p>
+                        <div className="flex flex-wrap gap-3">
+                            <div className="px-3 py-1.5 glass-inner rounded-full text-xs sm:text-sm font-medium text-white/50 flex items-center gap-2">
+                                <Telescope className="w-4 h-4" />
                                 {profile.telescope_type || 'No Telescope'}
                             </div>
-                            <div className="px-2.5 py-1 glass-purple text-cosmic-purple rounded-full text-xs font-medium flex items-center gap-1.5">
-                                <MapPin className="w-3 h-3" />
+                            <div className="px-3 py-1.5 glass-purple text-cosmic-purple rounded-full text-xs sm:text-sm font-medium flex items-center gap-2">
+                                <MapPin className="w-4 h-4" />
                                 Earth
                             </div>
                         </div>
+                    </div>
+
+                    {/* Interests Section (Requirement 5.6) */}
+                    <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-white/10">
+                        <h4 className="text-xs sm:text-sm font-bold text-white/40 uppercase tracking-wider mb-4">Interests</h4>
+                        {interestsLoading ? (
+                            <div className="flex items-center justify-center py-4">
+                                <Loader2 className="w-6 h-6 text-cosmic-purple animate-spin" />
+                            </div>
+                        ) : (
+                            <InterestsTags interests={interests} />
+                        )}
                     </div>
                 </div>
             </div>
@@ -337,15 +597,21 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
-                    {/* Referral Card */}
-                    <div className="glass-purple rounded-2xl p-5 sm:p-6">
-                        <h4 className="font-bold text-base mb-3 text-gradient">Refer a Friend</h4>
-                        <p className="text-xs text-white/50 mb-4">Give your friends 50 pts and earn 50 pts yourself when they log their first discovery.</p>
-                        <div className="glass-inner rounded-lg p-2.5 flex items-center justify-between">
-                            <code className="font-bold text-cosmic-purple text-sm">{profile.referral_code}</code>
-                            <button className="text-[10px] font-bold uppercase tracking-wider bg-cosmic-purple px-2.5 py-1 rounded-full hover:bg-cosmic-purple/80 transition-all">Copy</button>
+                    {/* Equipment/Gears Section - moved up for better hierarchy */}
+                    {gearsLoading ? (
+                        <div className="glass-effect rounded-2xl p-5 sm:p-6 flex items-center justify-center">
+                            <Loader2 className="w-6 h-6 text-cosmic-purple animate-spin" />
                         </div>
-                    </div>
+                    ) : (
+                        <GearsList
+                            userId={profile.id}
+                            isOwnProfile={true}
+                            gears={gears}
+                            onGearAdded={handleGearAdded}
+                            onGearUpdated={handleGearUpdated}
+                            onGearDeleted={handleGearDeleted}
+                        />
+                    )}
 
                     {/* Guild Leader Status */}
                     <div className="glass-effect rounded-2xl p-5 sm:p-6">
@@ -391,6 +657,16 @@ export default function ProfilePage() {
                                 </button>
                             </div>
                         )}
+                    </div>
+
+                    {/* Referral Card - moved to bottom */}
+                    <div className="glass-purple rounded-2xl p-5 sm:p-6">
+                        <h4 className="font-bold text-base mb-3 text-gradient">Refer a Friend</h4>
+                        <p className="text-xs text-white/50 mb-4">Give your friends 50 pts and earn 50 pts yourself when they log their first discovery.</p>
+                        <div className="glass-inner rounded-lg p-2.5 flex items-center justify-between">
+                            <code className="font-bold text-cosmic-purple text-sm">{profile.referral_code}</code>
+                            <button className="text-[10px] font-bold uppercase tracking-wider bg-cosmic-purple px-2.5 py-1 rounded-full hover:bg-cosmic-purple/80 transition-all">Copy</button>
+                        </div>
                     </div>
                 </div>
 
@@ -445,6 +721,24 @@ export default function ProfilePage() {
                                 />
                             </div>
 
+                            {/* Interests Selector (Requirements 5.1, 5.3) */}
+                            <div className="space-y-1.5">
+                                <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Interests</label>
+                                <p className="text-xs text-white/50 mb-2">Select your astronomy interests to get personalized content recommendations</p>
+                                {interestsLoading ? (
+                                    <div className="flex items-center justify-center py-4">
+                                        <Loader2 className="w-5 h-5 text-cosmic-purple animate-spin" />
+                                    </div>
+                                ) : (
+                                    <InterestsSelector
+                                        allInterests={allInterests}
+                                        selectedInterestIds={selectedInterestIds}
+                                        onSelectionChange={handleInterestSelectionChange}
+                                        editMode={true}
+                                    />
+                                )}
+                            </div>
+
                             <button
                                 onClick={handleSave}
                                 disabled={saving}
@@ -455,43 +749,111 @@ export default function ProfilePage() {
                         </div>
                     ) : (
                         <div className="space-y-6">
-                            {/* Badges Section */}
+                            {/* Recent Observations Section */}
                             <section>
-                                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                    <Trophy className="w-5 h-5 text-cosmic-gold" />
-                                    Badges Earned
-                                    <span className="text-xs font-normal text-white/40">({badges.length})</span>
-                                </h3>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-bold flex items-center gap-2">
+                                        <Eye className="w-5 h-5 text-cosmic-blue" />
+                                        Recent Observations
+                                    </h3>
+                                    <Link href="/dashboard/observations" className="text-xs text-cosmic-purple hover:text-cosmic-pink transition-colors">
+                                        View All →
+                                    </Link>
+                                </div>
 
-                                {badges.length === 0 ? (
+                                {observationsLoading ? (
+                                    <div className="glass-effect rounded-2xl p-8 flex items-center justify-center">
+                                        <Loader2 className="w-6 h-6 text-cosmic-purple animate-spin" />
+                                    </div>
+                                ) : observations.length === 0 ? (
                                     <div className="glass-effect rounded-2xl p-8 text-center">
-                                        <p className="text-sm text-white/40">Complete missions and log observations to earn badges!</p>
+                                        <Eye className="w-10 h-10 text-white/20 mx-auto mb-3" />
+                                        <p className="text-sm text-white/40 mb-3">No observations yet</p>
+                                        <Link 
+                                            href="/dashboard/observations/new"
+                                            className="inline-block px-4 py-2 bg-cosmic-purple/20 text-cosmic-purple rounded-lg text-sm font-medium hover:bg-cosmic-purple/30 transition-all"
+                                        >
+                                            Log Your First Observation
+                                        </Link>
                                     </div>
                                 ) : (
-                                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-                                        {badges.map(b => (
-                                            <div key={b.id} className="group relative">
-                                                <div className="aspect-square rounded-xl glass-effect p-2 flex flex-col items-center justify-center group-hover:scale-105 transition-all cursor-help">
-                                                    <div className="w-full h-full glass-gold rounded-lg flex items-center justify-center">
-                                                        <Star className="w-6 h-6 text-cosmic-gold fill-cosmic-gold" />
-                                                    </div>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                        {observations.map(obs => (
+                                            <Link 
+                                                key={obs.id} 
+                                                href={`/dashboard/observations`}
+                                                className="group glass-effect rounded-xl overflow-hidden hover:scale-[1.02] transition-all"
+                                            >
+                                                <div className="aspect-square bg-gradient-to-br from-cosmic-purple/20 to-cosmic-blue/20 relative">
+                                                    {obs.photo_url ? (
+                                                        <img src={obs.photo_url} alt={obs.object_name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center">
+                                                            <Telescope className="w-8 h-8 text-white/20" />
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 </div>
-                                                <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 bg-white text-black px-2.5 py-1.5 rounded-lg text-[10px] font-medium opacity-0 group-hover:opacity-100 transition-all z-30 pointer-events-none shadow-xl w-28 text-center">
-                                                    <p className="text-[9px] text-cosmic-purple font-bold uppercase mb-0.5">{b.badges?.name}</p>
-                                                    <p className="text-[8px] text-gray-600 leading-tight">{b.badges?.description}</p>
+                                                <div className="p-3">
+                                                    <p className="text-sm font-medium truncate">{obs.object_name}</p>
+                                                    <p className="text-xs text-white/40 mt-0.5">{obs.category}</p>
                                                 </div>
-                                            </div>
+                                            </Link>
                                         ))}
                                     </div>
                                 )}
                             </section>
 
-                            {/* Recent Activity Section */}
+                            {/* Feed Posts Section */}
                             <section>
-                                <h3 className="text-lg font-bold mb-4">Recent Discoveries</h3>
-                                <div className="glass-effect rounded-2xl p-8 text-center">
-                                    <p className="text-sm text-white/40">No recent activity to show.</p>
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-bold flex items-center gap-2">
+                                        <MessageSquare className="w-5 h-5 text-cosmic-pink" />
+                                        Feed Posts
+                                    </h3>
+                                    <Link href="/dashboard/timeline" className="text-xs text-cosmic-purple hover:text-cosmic-pink transition-colors">
+                                        View Timeline →
+                                    </Link>
                                 </div>
+
+                                {postsLoading ? (
+                                    <div className="glass-effect rounded-2xl p-8 flex items-center justify-center">
+                                        <Loader2 className="w-6 h-6 text-cosmic-purple animate-spin" />
+                                    </div>
+                                ) : posts.length === 0 ? (
+                                    <div className="glass-effect rounded-2xl p-8 text-center">
+                                        <MessageSquare className="w-10 h-10 text-white/20 mx-auto mb-3" />
+                                        <p className="text-sm text-white/40">No posts yet. Share your astronomy journey!</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {posts.map(post => (
+                                            <div key={post.id} className="glass-effect rounded-xl p-4 hover:bg-white/[0.03] transition-all">
+                                                {post.image_url && (
+                                                    <div className="rounded-lg overflow-hidden mb-3 max-h-40">
+                                                        <img src={post.image_url} alt="" className="w-full h-full object-cover" />
+                                                    </div>
+                                                )}
+                                                {post.caption && (
+                                                    <p className="text-sm text-white/80 line-clamp-2 mb-2">{post.caption}</p>
+                                                )}
+                                                <div className="flex items-center justify-between text-white/40">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="flex items-center gap-1 text-xs">
+                                                            <Heart className="w-3 h-3" /> {post.likes_count}
+                                                        </span>
+                                                        <span className="flex items-center gap-1 text-xs">
+                                                            <MessageSquare className="w-3 h-3" /> {post.comments_count}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-xs">
+                                                        {new Date(post.created_at).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </section>
                         </div>
                     )}

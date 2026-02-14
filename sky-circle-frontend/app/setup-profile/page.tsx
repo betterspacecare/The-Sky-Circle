@@ -60,19 +60,56 @@ export default function SetupProfilePage() {
                 photoUrl = publicUrl
             }
 
-            // Update user profile
-            const { error: updateError } = await supabase
-                .from('users')
-                .update({
-                    display_name: formData.displayName,
-                    bio: formData.bio,
-                    telescope_type: formData.telescopeType || null,
-                    experience_level: formData.experienceLevel,
-                    profile_photo_url: photoUrl,
-                })
-                .eq('id', user.id)
+            // Generate referral code for new users
+            const generateReferralCode = () => {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+                let result = ''
+                for (let i = 0; i < 8; i++) {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length))
+                }
+                return result
+            }
 
-            if (updateError) throw updateError
+            // Check if user profile already exists
+            const { data: existingProfile } = await supabase
+                .from('users')
+                .select('id, referral_code, level, total_points, profile_photo_url')
+                .eq('id', user.id)
+                .maybeSingle()
+
+            if (existingProfile) {
+                // Update existing profile (preserve referral_code, level, total_points)
+                const { error: updateError } = await supabase
+                    .from('users')
+                    .update({
+                        display_name: formData.displayName,
+                        bio: formData.bio,
+                        telescope_type: formData.telescopeType || null,
+                        experience_level: formData.experienceLevel,
+                        profile_photo_url: photoUrl || existingProfile.profile_photo_url,
+                    })
+                    .eq('id', user.id)
+
+                if (updateError) throw updateError
+            } else {
+                // Create new profile
+                const { error: insertError } = await supabase
+                    .from('users')
+                    .insert({
+                        id: user.id,
+                        email: user.email!,
+                        display_name: formData.displayName,
+                        bio: formData.bio,
+                        telescope_type: formData.telescopeType || null,
+                        experience_level: formData.experienceLevel,
+                        profile_photo_url: photoUrl,
+                        referral_code: generateReferralCode(),
+                        level: 1,
+                        total_points: 0,
+                    })
+
+                if (insertError) throw insertError
+            }
 
             router.push('/dashboard')
         } catch (err: any) {

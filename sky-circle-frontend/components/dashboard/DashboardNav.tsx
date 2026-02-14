@@ -19,7 +19,8 @@ import {
     Sparkles,
     Menu,
     X,
-    UsersRound
+    UsersRound,
+    Newspaper
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
@@ -27,13 +28,15 @@ export default function DashboardNav() {
     const pathname = usePathname()
     const router = useRouter()
     const supabase = createClient()
-    const { user, profile, setUser, setProfile } = useUserStore()
+    const { profile, setUser, setProfile } = useUserStore()
     const { unreadCount: alertUnreadCount } = useAlertStore()
     const { unreadCount: notificationUnreadCount } = useNotificationStore()
     const totalUnread = alertUnreadCount + notificationUnreadCount
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
     useEffect(() => {
+        let channel: ReturnType<typeof supabase.channel> | null = null
+        
         supabase.auth.getUser().then(({ data: { user } }: { data: { user: any } }) => {
             setUser(user)
             if (user) {
@@ -41,10 +44,34 @@ export default function DashboardNav() {
                     .from('users')
                     .select('*')
                     .eq('id', user.id)
-                    .single()
-                    .then(({ data }: { data: any }) => {
+                    .maybeSingle()
+                    .then(({ data, error }: { data: any; error: any }) => {
+                        if (error) {
+                            console.warn('Could not fetch user profile:', error.message)
+                            return
+                        }
                         if (data) setProfile(data)
                     })
+                
+                // Subscribe to realtime notifications for badge count
+                channel = supabase
+                    .channel('nav-notifications')
+                    .on(
+                        'postgres_changes',
+                        {
+                            event: 'INSERT',
+                            schema: 'public',
+                            table: 'notifications',
+                            filter: `user_id=eq.${user.id}`
+                        },
+                        () => {
+                            // Increment unread count when new notification arrives
+                            useNotificationStore.setState((state) => ({
+                                unreadCount: state.unreadCount + 1
+                            }))
+                        }
+                    )
+                    .subscribe()
             }
         })
 
@@ -52,7 +79,12 @@ export default function DashboardNav() {
             setUser(session?.user ?? null)
         })
 
-        return () => subscription.unsubscribe()
+        return () => {
+            subscription.unsubscribe()
+            if (channel) {
+                supabase.removeChannel(channel)
+            }
+        }
     }, [])
 
     // Close menu on route change
@@ -84,6 +116,8 @@ export default function DashboardNav() {
         { href: '/dashboard/groups', label: 'Guilds', icon: UsersRound },
         { href: '/dashboard/missions', label: 'Missions', icon: Trophy },
         { href: '/dashboard/community', label: 'Community', icon: Users },
+        { href: '/dashboard/discover', label: 'Discover', icon: Users },
+        { href: '/dashboard/timeline', label: 'Timeline', icon: Newspaper },
     ]
 
     return (

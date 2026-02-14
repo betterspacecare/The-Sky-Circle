@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { StarField } from "@/components/StarField";
+import ToastContainer from "@/components/ui/ToastContainer";
 
 export const metadata: Metadata = {
   title: "SkyGuild | Astronomy Community",
@@ -24,6 +25,7 @@ export default function RootLayout({
         <div className="cosmic-bg" aria-hidden="true" />
         <StarField starCount={120} showShootingStars={true} />
         {children}
+        <ToastContainer />
       </body>
     </html>
   );

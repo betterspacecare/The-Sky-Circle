@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useNotificationStore, Notification, NotificationPreferences } from '@/store/notificationStore'
 import { useAlertStore } from '@/store/alertStore'
@@ -23,16 +24,19 @@ type TabType = 'all' | 'alerts' | 'activity' | 'settings'
 
 export default function AlertsPage() {
     const supabase = createClient()
+    const router = useRouter()
     const [activeTab, setActiveTab] = useState<TabType>('all')
     const [loading, setLoading] = useState(true)
     const [userId, setUserId] = useState<string | null>(null)
     
     const { 
         notifications, 
-        setNotifications, 
+        setNotifications,
+        addNotification,
         markAsRead, 
         markAllAsRead,
         deleteNotification,
+        clearAll,
         preferences,
         setPreferences,
         setPushSubscription
@@ -43,22 +47,70 @@ export default function AlertsPage() {
     const [pushPermission, setPushPermission] = useState<NotificationPermission | 'unsupported'>('default')
     const [savingPrefs, setSavingPrefs] = useState(false)
 
+    // Format relative time
+    const formatRelativeTime = (dateString: string) => {
+        const date = new Date(dateString)
+        const now = new Date()
+        const diffMs = now.getTime() - date.getTime()
+        const diffMins = Math.floor(diffMs / 60000)
+        const diffHours = Math.floor(diffMs / 3600000)
+        const diffDays = Math.floor(diffMs / 86400000)
+        
+        if (diffMins < 1) return 'Just now'
+        if (diffMins < 60) return `${diffMins}m ago`
+        if (diffHours < 24) return `${diffHours}h ago`
+        if (diffDays < 7) return `${diffDays}d ago`
+        return date.toLocaleDateString()
+    }
+
     useEffect(() => {
+        let channel: ReturnType<typeof supabase.channel> | null = null
+        
         const init = async () => {
-            // Get current user
-            const { data: { user } } = await supabase.auth.getUser()
-            if (user) {
-                setUserId(user.id)
-                await fetchNotifications(user.id)
-                await fetchPreferences(user.id)
+            try {
+                // Get current user
+                const { data: { user } } = await supabase.auth.getUser()
+                if (user) {
+                    setUserId(user.id)
+                    await fetchNotifications(user.id)
+                    await fetchPreferences(user.id)
+                    
+                    // Subscribe to realtime notifications
+                    channel = supabase
+                        .channel('notifications-realtime')
+                        .on(
+                            'postgres_changes',
+                            {
+                                event: 'INSERT',
+                                schema: 'public',
+                                table: 'notifications',
+                                filter: `user_id=eq.${user.id}`
+                            },
+                            (payload) => {
+                                addNotification(payload.new as Notification)
+                            }
+                        )
+                        .subscribe()
+                }
+                await fetchAlerts()
+                
+                // Check push permission
+                setPushPermission(getNotificationPermission())
+            } catch (error) {
+                console.error('Error initializing notifications:', error)
+            } finally {
+                setLoading(false)
             }
-            await fetchAlerts()
-            
-            // Check push permission
-            setPushPermission(getNotificationPermission())
-            setLoading(false)
         }
+        
         init()
+        
+        // Cleanup subscription on unmount
+        return () => {
+            if (channel) {
+                supabase.removeChannel(channel)
+            }
+        }
     }, [])
 
     const fetchNotifications = async (uid: string) => {
@@ -121,6 +173,7 @@ export default function AlertsPage() {
     }
 
     const handleMarkAllAsRead = async () => {
+        // Mark all activity notifications as read
         markAllAsRead()
         if (userId) {
             await supabase
@@ -128,6 +181,17 @@ export default function AlertsPage() {
                 .update({ is_read: true })
                 .eq('user_id', userId)
                 .eq('is_read', false)
+            
+            // Mark all sky alerts as read
+            const unreadAlertIds = alerts.filter(a => !a.isRead).map(a => a.id)
+            if (unreadAlertIds.length > 0) {
+                for (const alertId of unreadAlertIds) {
+                    markAlertAsRead(alertId)
+                    await supabase
+                        .from('user_alert_reads')
+                        .upsert({ user_id: userId, alert_id: alertId })
+                }
+            }
         }
     }
 
@@ -139,12 +203,70 @@ export default function AlertsPage() {
             .eq('id', notificationId)
     }
 
+    const handleClearAllNotifications = async () => {
+        if (!userId) return
+        
+        // Clear activity notifications from database and store
+        clearAll()
+        await supabase
+            .from('notifications')
+            .delete()
+            .eq('user_id', userId)
+        
+        // Clear sky alerts from local state (mark all as read)
+        setAlerts([])
+    }
+
     const handleMarkAlertAsRead = async (alertId: string) => {
         markAlertAsRead(alertId)
         if (userId) {
             await supabase
                 .from('user_alert_reads')
                 .upsert({ user_id: userId, alert_id: alertId })
+        }
+    }
+
+    // Navigate to relevant content based on notification type
+    const handleNotificationClick = async (notification: Notification) => {
+        // Mark as read first
+        if (!notification.is_read) {
+            await handleMarkAsRead(notification.id)
+        }
+        
+        // Navigate based on notification type and data
+        const data = notification.data || {}
+        
+        switch (notification.type) {
+            case 'follow':
+                if (data.follower_id) {
+                    router.push(`/dashboard/profile/${data.follower_id}`)
+                }
+                break
+            case 'like':
+            case 'comment':
+                if (data.post_id) {
+                    router.push(`/dashboard/timeline?post=${data.post_id}`)
+                }
+                break
+            case 'badge_earned':
+                router.push('/dashboard/profile')
+                break
+            case 'mission_complete':
+                router.push('/dashboard/missions')
+                break
+            case 'event_reminder':
+                if (data.event_id) {
+                    router.push(`/dashboard/events/${data.event_id}`)
+                } else {
+                    router.push('/dashboard/events')
+                }
+                break
+            case 'sky_alert':
+                // Stay on alerts page, already viewing it
+                break
+            default:
+                // No navigation for system notifications
+                break
         }
     }
 
@@ -237,14 +359,27 @@ export default function AlertsPage() {
                     </div>
                 </div>
                 
-                {activeTab !== 'settings' && unreadNotifications.length > 0 && (
-                    <button
-                        onClick={handleMarkAllAsRead}
-                        className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl glass-effect hover:bg-white/10 transition-all text-xs sm:text-sm font-bold text-surface-300 hover:text-surface-50"
-                    >
-                        <CheckCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        Mark all read
-                    </button>
+                {activeTab !== 'settings' && (
+                    <div className="flex items-center gap-2">
+                        {(unreadNotifications.length > 0 || unreadAlerts.length > 0) && (
+                            <button
+                                onClick={handleMarkAllAsRead}
+                                className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl glass-effect hover:bg-white/10 transition-all text-xs sm:text-sm font-bold text-surface-300 hover:text-surface-50"
+                            >
+                                <CheckCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                Mark all read
+                            </button>
+                        )}
+                        {(notifications.length > 0 || alerts.length > 0) && (
+                            <button
+                                onClick={handleClearAllNotifications}
+                                className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl glass-effect hover:bg-danger-100/20 transition-all text-xs sm:text-sm font-bold text-surface-300 hover:text-danger-100"
+                            >
+                                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                                Clear all
+                            </button>
+                        )}
+                    </div>
                 )}
             </div>
 
@@ -318,7 +453,7 @@ export default function AlertsPage() {
                                             </div>
                                             <p className="text-surface-400 text-sm line-clamp-2">{alert.message}</p>
                                             <span className="text-xs text-surface-500 mt-2 block">
-                                                {new Date(alert.created_at).toLocaleDateString()}
+                                                {formatRelativeTime(alert.created_at)}
                                             </span>
                                         </div>
                                     </div>
@@ -336,8 +471,9 @@ export default function AlertsPage() {
                             {notifications.map(notification => (
                                 <div
                                     key={notification.id}
+                                    onClick={() => handleNotificationClick(notification)}
                                     className={cn(
-                                        "group glass-effect rounded-2xl p-6 transition-all hover:scale-[1.01]",
+                                        "group glass-effect rounded-2xl p-6 transition-all hover:scale-[1.01] cursor-pointer",
                                         !notification.is_read && "ring-1 ring-primary-200/30"
                                     )}
                                 >
@@ -357,7 +493,7 @@ export default function AlertsPage() {
                                             </div>
                                             <p className="text-surface-400 text-sm">{notification.message}</p>
                                             <span className="text-xs text-surface-500 mt-2 block">
-                                                {new Date(notification.created_at).toLocaleDateString()}
+                                                {formatRelativeTime(notification.created_at)}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
