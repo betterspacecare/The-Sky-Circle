@@ -110,14 +110,21 @@ export default function DashboardNav() {
     }
 
     const navItems = [
+        // Core
         { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        
+        // Content & Activity
         { href: '/dashboard/observations', label: 'Observations', icon: Eye },
+        { href: '/dashboard/timeline', label: 'Timeline', icon: Newspaper },
         { href: '/dashboard/events', label: 'Events', icon: Calendar },
-        { href: '/dashboard/groups', label: 'Guilds', icon: UsersRound },
-        { href: '/dashboard/missions', label: 'Missions', icon: Trophy },
+        
+        // Social & Community
         { href: '/dashboard/community', label: 'Community', icon: Users },
         { href: '/dashboard/discover', label: 'Discover', icon: Users },
-        { href: '/dashboard/timeline', label: 'Timeline', icon: Newspaper },
+        { href: '/dashboard/groups', label: 'Guilds', icon: UsersRound },
+        
+        // Gamification
+        { href: '/dashboard/missions', label: 'Missions', icon: Trophy },
     ]
 
     return (
