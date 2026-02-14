@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { Loader2, Sparkles, Lock, Mail, AlertCircle } from 'lucide-react'
 
@@ -18,6 +19,7 @@ function generateStars(count: number) {
 }
 
 export function LoginPage({ onForgotPassword }: LoginPageProps) {
+    const navigate = useNavigate()
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
@@ -31,7 +33,13 @@ export function LoginPage({ onForgotPassword }: LoginPageProps) {
         setLoading(true)
 
         try {
-            await signIn(email, password)
+            const result = await signIn(email, password)
+            if (result.error) {
+                setError(result.error)
+            } else {
+                // Navigate to dashboard on successful login
+                navigate('/')
+            }
         } catch (err: any) {
             setError(err.message || 'Failed to sign in')
         } finally {
