@@ -27,6 +27,7 @@ export default function Footer() {
                     </div>
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-white/40 mb-3">
                         <Link href="/about" className="hover:text-white/60">About</Link>
+                        <Link href="/faq" className="hover:text-white/60">FAQ</Link>
                         <Link href="/terms" className="hover:text-white/60">Terms</Link>
                         <Link href="/privacy" className="hover:text-white/60">Privacy</Link>
                         <Link href="/cancellation" className="hover:text-white/60">Cancellation</Link>
@@ -77,6 +78,7 @@ export default function Footer() {
                             <h4 className="font-medium text-xs uppercase tracking-wider text-white/40 mb-3">Legal</h4>
                             <ul className="space-y-1.5">
                                 <li><Link href="/about" className="text-xs text-white/60 hover:text-white transition-colors">About Us</Link></li>
+                                <li><Link href="/faq" className="text-xs text-white/60 hover:text-white transition-colors">FAQ</Link></li>
                                 <li><Link href="/terms" className="text-xs text-white/60 hover:text-white transition-colors">Terms</Link></li>
                                 <li><Link href="/privacy" className="text-xs text-white/60 hover:text-white transition-colors">Privacy</Link></li>
                                 <li><Link href="/cancellation" className="text-xs text-white/60 hover:text-white transition-colors">Cancellation</Link></li>

@@ -10,6 +10,7 @@ import GearsList from '@/components/profile/GearsList'
 import FollowStats from '@/components/social/FollowStats'
 import InterestsTags from '@/components/social/InterestsTags'
 import InterestsSelector from '@/components/social/InterestsSelector'
+import AccountLinking from '@/components/profile/AccountLinking'
 import { fetchUserGears } from '@/lib/services/gearService'
 import { getFollowCounts } from '@/lib/services/followService'
 import { fetchAllInterests, fetchUserInterests, updateUserInterests } from '@/lib/services/interestsService'
@@ -89,6 +90,15 @@ export default function ProfilePage() {
 
     useEffect(() => {
         fetchProfile()
+        
+        // Check for linking success message
+        const params = new URLSearchParams(window.location.search)
+        if (params.get('linked') === 'success') {
+            // Show success message
+            alert('✅ Google account linked successfully!')
+            // Remove the parameter from URL
+            window.history.replaceState({}, '', '/dashboard/profile')
+        }
     }, [])
 
     // Set up realtime subscription for follow count updates
@@ -612,6 +622,9 @@ export default function ProfilePage() {
                             onGearDeleted={handleGearDeleted}
                         />
                     )}
+
+                    {/* Account Linking Section */}
+                    <AccountLinking />
 
                     {/* Guild Leader Status */}
                     <div className="glass-effect rounded-2xl p-5 sm:p-6">

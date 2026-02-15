@@ -113,7 +113,14 @@ export default function SignupPage() {
 
             if (error) throw error
         } catch (err: any) {
-            setError(err.message || 'Failed to sign up with Google')
+            console.error('Google signup error:', err)
+            
+            // Handle specific error cases
+            if (err.message?.includes('already registered') || err.message?.includes('Email already exists')) {
+                setError('This email is already registered. Please sign in instead, or use a different email address.')
+            } else {
+                setError(err.message || 'Failed to sign up with Google')
+            }
             setLoading(false)
         }
     }

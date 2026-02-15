@@ -45,12 +45,23 @@ export default function LoginPage() {
                 provider: 'google',
                 options: {
                     redirectTo: `${window.location.origin}/auth/callback`,
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                    },
                 },
             })
 
             if (error) throw error
         } catch (err: any) {
-            setError(err.message || 'Failed to sign in with Google')
+            console.error('Google login error:', err)
+            
+            // Handle specific error cases
+            if (err.message?.includes('already registered') || err.message?.includes('Email already exists')) {
+                setError('This email is already registered with a password. Please sign in with your email and password, then link your Google account in profile settings.')
+            } else {
+                setError(err.message || 'Failed to sign in with Google')
+            }
             setLoading(false)
         }
     }

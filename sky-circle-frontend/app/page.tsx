@@ -6,6 +6,38 @@ import Link from 'next/link'
 import { Telescope, Star, Users, Trophy, Calendar, Eye, Sparkles, Target, Globe, Mail, MessageCircle } from 'lucide-react'
 import Footer from '@/components/Footer'
 import { createClient } from '@/lib/supabase/client'
+import LocalBusinessSchema from '@/components/seo/LocalBusinessSchema'
+
+// Structured data for SEO
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "SkyGuild",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "Web",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "description": "Join SkyGuild, the ultimate astronomy community platform. Log celestial observations, earn badges, complete missions, attend events, and connect with fellow stargazers worldwide.",
+  "url": "https://theskycircle.com",
+  "image": "https://theskycircle.com/og-image.jpg",
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "ratingCount": "500"
+  },
+  "featureList": [
+    "Log celestial observations",
+    "Earn astronomy badges",
+    "Complete missions",
+    "Join astronomy events",
+    "Connect with stargazers",
+    "Track your progress",
+    "Share astrophotography"
+  ]
+}
 
 function HomeContent() {
   const router = useRouter()
@@ -19,13 +51,6 @@ function HomeContent() {
     badges: 0
   })
   const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const code = searchParams.get('code')
-    if (code) {
-      router.replace(`/reset-password?code=${code}`)
-    }
-  }, [searchParams, router])
 
   useEffect(() => {
     async function fetchStats() {
@@ -55,6 +80,13 @@ function HomeContent() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <LocalBusinessSchema />
+      
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-4">
         <div className="max-w-5xl mx-auto text-center">

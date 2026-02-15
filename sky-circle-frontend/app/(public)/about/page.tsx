@@ -5,6 +5,32 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
+// Structured data for About page
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "AboutPage",
+  "name": "About SkyGuild",
+  "description": "Learn about SkyGuild's mission to build a global community of stargazers and make astronomy accessible to everyone.",
+  "url": "https://theskycircle.com/about",
+  "mainEntity": {
+    "@type": "Organization",
+    "name": "SkyGuild",
+    "url": "https://theskycircle.com",
+    "logo": "https://theskycircle.com/logo.png",
+    "description": "SkyGuild is building the largest community of amateur astronomers and space enthusiasts on the planet.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Naya Raipur",
+      "addressCountry": "IN"
+    },
+    "sameAs": [
+      "https://twitter.com/skyguild",
+      "https://instagram.com/skyguild",
+      "https://youtube.com/@skyguild"
+    ]
+  }
+}
+
 export default function AboutPage() {
     const supabase = createClient()
     const [stats, setStats] = useState({
@@ -43,6 +69,12 @@ export default function AboutPage() {
 
     return (
         <div className="min-h-screen flex flex-col">
+            {/* Structured Data */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+            />
+            
             {/* Hero */}
             <div className="relative py-32 px-4 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-b from-cosmic-purple/20 via-cosmic-pink/10 to-transparent" />
