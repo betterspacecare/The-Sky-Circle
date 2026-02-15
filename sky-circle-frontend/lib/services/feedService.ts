@@ -352,8 +352,10 @@ export async function fetchTrendingPosts(
     .order('created_at', { ascending: false })
     .range(offset, offset + pageSize - 1);
 
-  if (excludeUserIds.length > 0) {
-    obsQuery = obsQuery.not('user_id', 'in', `(${excludeUserIds.join(',')})`);
+  // Only exclude followed users (not self) to show own posts
+  const usersToExclude = excludeUserIds.filter(id => id !== userId);
+  if (usersToExclude.length > 0) {
+    obsQuery = obsQuery.not('user_id', 'in', `(${usersToExclude.join(',')})`);
   }
 
   if (uniqueCategories.length > 0) {
@@ -382,8 +384,9 @@ export async function fetchTrendingPosts(
     .order('created_at', { ascending: false })
     .range(offset, offset + pageSize - 1);
 
-  if (excludeUserIds.length > 0) {
-    postsQuery = postsQuery.not('user_id', 'in', `(${excludeUserIds.join(',')})`);
+  // Only exclude followed users (not self) to show own posts
+  if (usersToExclude.length > 0) {
+    postsQuery = postsQuery.not('user_id', 'in', `(${usersToExclude.join(',')})`);
   }
 
   const { data: posts } = await postsQuery;
