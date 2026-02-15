@@ -115,6 +115,7 @@ export default function DashboardNav() {
         
         // Content & Activity
         { href: '/dashboard/observations', label: 'Observations', icon: Eye },
+        { href: '/dashboard/sky-finder', label: 'Sky Finder', icon: Telescope },
         { href: '/dashboard/timeline', label: 'Timeline', icon: Newspaper },
         { href: '/dashboard/events', label: 'Events', icon: Calendar },
         
