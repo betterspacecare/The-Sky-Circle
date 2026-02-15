@@ -83,6 +83,7 @@ export interface TimelinePost {
     user_id: string;
     caption: string | null;
     image_url: string;
+    images?: string[]; // Array of image URLs for multi-image posts
     created_at: string;
     post_type?: 'observation' | 'post'; // observation = from observations table, post = from posts table
     category?: string; // only for observations

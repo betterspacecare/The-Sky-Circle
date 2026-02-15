@@ -3,10 +3,9 @@
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Newspaper, Loader2, Users, Sparkles, Camera, Send, X, User, Clock, Flame, UserCheck } from 'lucide-react'
+import { Newspaper, Loader2, Camera, Send, X, User, Clock, Flame, UserCheck } from 'lucide-react'
 import FeedContainer from '@/components/social/FeedContainer'
 import { getFollowingIds, getUserInterestNames } from '@/lib/services/feedService'
-import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { STORAGE_BUCKETS } from '@/lib/constants'
 
@@ -30,6 +29,7 @@ export default function TimelinePage() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [feedFilter, setFeedFilter] = useState<FeedFilter>('latest')
+    const [feedKey, setFeedKey] = useState(0) // Key to force feed refresh
     
     // Create post state
     const [currentUser, setCurrentUser] = useState<any>(null)
@@ -158,38 +158,45 @@ export default function TimelinePage() {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) throw new Error('Not logged in')
 
-            // Upload first image
-            const firstImage = selectedImages[0]
-            const fileExt = firstImage.name.split('.').pop()
-            const fileName = `${user.id}/${Date.now()}.${fileExt}`
+            // Upload all images
+            const imageUrls: string[] = []
+            
+            for (let i = 0; i < selectedImages.length; i++) {
+                const image = selectedImages[i]
+                const fileExt = image.name.split('.').pop()
+                const fileName = `${user.id}/${Date.now()}_${i}.${fileExt}`
 
-            console.log('Uploading image to:', STORAGE_BUCKETS.POST_IMAGES, fileName)
+                console.log(`Uploading image ${i + 1}/${selectedImages.length} to:`, STORAGE_BUCKETS.POST_IMAGES, fileName)
 
-            const { error: uploadError } = await supabase.storage
-                .from(STORAGE_BUCKETS.POST_IMAGES)
-                .upload(fileName, firstImage)
+                const { error: uploadError } = await supabase.storage
+                    .from(STORAGE_BUCKETS.POST_IMAGES)
+                    .upload(fileName, image)
 
-            if (uploadError) {
-                console.error('Upload error:', uploadError)
-                if (uploadError.message.includes('Bucket not found')) {
-                    throw new Error(`Storage bucket "${STORAGE_BUCKETS.POST_IMAGES}" not found. Please create it in Supabase dashboard.`)
+                if (uploadError) {
+                    console.error('Upload error:', uploadError)
+                    if (uploadError.message.includes('Bucket not found')) {
+                        throw new Error(`Storage bucket "${STORAGE_BUCKETS.POST_IMAGES}" not found. Please create it in Supabase dashboard.`)
+                    }
+                    throw uploadError
                 }
-                throw uploadError
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from(STORAGE_BUCKETS.POST_IMAGES)
+                    .getPublicUrl(fileName)
+
+                imageUrls.push(publicUrl)
             }
 
-            const { data: { publicUrl } } = supabase.storage
-                .from(STORAGE_BUCKETS.POST_IMAGES)
-                .getPublicUrl(fileName)
+            console.log(`All ${imageUrls.length} images uploaded, creating post`)
 
-            console.log('Image uploaded, creating post with URL:', publicUrl)
-
-            // Create post in posts table
+            // Create post in posts table with all images
             const { data: newPost, error: insertError } = await supabase
                 .from('posts')
                 .insert({
                     user_id: user.id,
                     caption: newCaption,
-                    image_url: publicUrl,
+                    image_url: imageUrls[0], // First image for backward compatibility
+                    images: imageUrls, // All images as array
                     is_deleted: false,
                     is_reported: false
                 })
@@ -209,8 +216,8 @@ export default function TimelinePage() {
             setImagePreviews([])
             setCurrentImageIndex(0)
             
-            // Force reload to show new post
-            window.location.reload()
+            // Trigger feed refresh by updating a key
+            setFeedKey(prev => prev + 1)
         } catch (error: any) {
             console.error('Error creating post:', error)
             alert(`Failed to create post: ${error.message}`)
@@ -425,6 +432,7 @@ export default function TimelinePage() {
 
             {/* Feed Container - Requirements 4.1, 4.7 */}
             <FeedContainer
+                key={feedKey}
                 userId={feedProps.userId}
                 followingIds={feedProps.followingIds}
                 userInterests={feedProps.userInterests}

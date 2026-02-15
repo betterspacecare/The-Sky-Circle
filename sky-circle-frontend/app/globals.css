@@ -818,3 +818,31 @@ input[type="submit"]:disabled {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
 }
+
+
+/* ============================================
+   CAROUSEL SCROLLBAR HIDE
+   ============================================ */
+
+.scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Smooth scroll behavior for carousel */
+.snap-x {
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+}
+
+.snap-center {
+    scroll-snap-align: center;
+}
+
+.snap-always {
+    scroll-snap-stop: always;
+}

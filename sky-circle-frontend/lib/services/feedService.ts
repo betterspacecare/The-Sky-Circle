@@ -146,6 +146,7 @@ export async function fetchFollowedUsersPosts(
       user_id,
       caption,
       image_url,
+      images,
       created_at,
       is_deleted,
       users!posts_user_id_fkey (
@@ -249,6 +250,7 @@ export async function fetchFollowedUsersPosts(
         user_id: post.user_id,
         caption: post.caption,
         image_url: post.image_url || '',
+        images: post.images || [post.image_url],
         created_at: post.created_at,
         post_type: 'post' as const,
         users: {
@@ -372,6 +374,7 @@ export async function fetchTrendingPosts(
       user_id,
       caption,
       image_url,
+      images,
       created_at,
       is_deleted,
       users!posts_user_id_fkey (
@@ -477,6 +480,7 @@ export async function fetchTrendingPosts(
         user_id: post.user_id,
         caption: post.caption,
         image_url: post.image_url || '',
+        images: post.images || [post.image_url],
         created_at: post.created_at,
         post_type: 'post' as const,
         users: {

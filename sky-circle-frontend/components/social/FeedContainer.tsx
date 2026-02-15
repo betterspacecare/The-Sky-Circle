@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { Heart, MessageCircle, Loader2, Users, ImageOff, RefreshCw, MoreHorizontal, Bookmark, Share2, Trash2 } from 'lucide-react'
+import { Heart, MessageCircle, Loader2, ImageOff, RefreshCw, MoreHorizontal, Bookmark, Share2, Trash2 } from 'lucide-react'
 import { TimelinePost } from '@/types/social.types'
 import { fetchTimelineFeed, DEFAULT_FEED_CONFIG, FeedQuery } from '@/lib/services/feedService'
 import { createClient } from '@/lib/supabase/client'
@@ -65,9 +65,10 @@ function formatCount(count: number): string {
 interface PostCardProps {
     post: TimelinePost;
     currentUserId: string;
+    onDelete: (postId: string) => void;
 }
 
-function PostCard({ post, currentUserId }: PostCardProps) {
+function PostCard({ post, currentUserId, onDelete }: PostCardProps) {
     const supabase = createClient()
     const [imageError, setImageError] = useState(false)
     const [isLiked, setIsLiked] = useState(post.is_liked)
@@ -76,7 +77,47 @@ function PostCard({ post, currentUserId }: PostCardProps) {
     const [showComments, setShowComments] = useState(false)
     const [showMenu, setShowMenu] = useState(false)
     const [isBookmarked, setIsBookmarked] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const menuRef = useRef<HTMLDivElement>(null)
+    const carouselRef = useRef<HTMLDivElement>(null)
+
+    // Get images array (use images if available, fallback to single image_url)
+    const images = post.images && post.images.length > 0 ? post.images : [post.image_url]
+    const hasMultipleImages = images.length > 1
+
+    // Carousel navigation with smooth scroll
+    const scrollToImage = (index: number) => {
+        if (carouselRef.current) {
+            const scrollWidth = carouselRef.current.scrollWidth
+            const targetScroll = (scrollWidth / images.length) * index
+            carouselRef.current.scrollTo({
+                left: targetScroll,
+                behavior: 'smooth'
+            })
+        }
+        setCurrentImageIndex(index)
+    }
+
+    const nextImage = () => {
+        const nextIndex = (currentImageIndex + 1) % images.length
+        scrollToImage(nextIndex)
+    }
+
+    const prevImage = () => {
+        const prevIndex = (currentImageIndex - 1 + images.length) % images.length
+        scrollToImage(prevIndex)
+    }
+
+    // Update current index based on scroll position
+    const handleScroll = () => {
+        if (carouselRef.current) {
+            const scrollLeft = carouselRef.current.scrollLeft
+            const itemWidth = carouselRef.current.offsetWidth
+            const index = Math.round(scrollLeft / itemWidth)
+            setCurrentImageIndex(index)
+        }
+    }
 
     // Load bookmark status from localStorage
     useEffect(() => {
@@ -164,33 +205,45 @@ function PostCard({ post, currentUserId }: PostCardProps) {
     const handleDelete = async () => {
         if (!confirm('Delete this post?')) return
         
+        setShowMenu(false)
+        setIsDeleting(true)
+        
+        // Optimistically remove from UI immediately
+        setTimeout(() => {
+            onDelete(post.id)
+        }, 300) // Wait for fade animation
+        
         try {
-            // Check if it's a post or observation
+            // Use hard delete for both posts and observations
+            // This avoids RLS policy issues with UPDATE
             if (post.post_type === 'post') {
-                await supabase
+                const { error } = await supabase
                     .from('posts')
-                    .update({ is_deleted: true })
+                    .delete()
                     .eq('id', post.id)
                     .eq('user_id', currentUserId)
+                
+                if (error) throw error
             } else {
-                await supabase
+                const { error } = await supabase
                     .from('observations')
                     .delete()
                     .eq('id', post.id)
                     .eq('user_id', currentUserId)
+                
+                if (error) throw error
             }
-            
-            // Reload to show updated feed
-            window.location.reload()
         } catch (error) {
             console.error('Error deleting post:', error)
             alert('Failed to delete post')
+            setIsDeleting(false)
         }
-        setShowMenu(false)
     }
 
     return (
-        <article className="bg-[#0a0e17] border border-white/10 rounded-lg overflow-hidden mb-4">
+        <article className={`bg-[#0a0e17] border border-white/10 rounded-lg overflow-hidden mb-4 transition-all duration-300 ${
+            isDeleting ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'
+        }`}>
             {/* Post Header */}
             <div className="p-3 flex items-center justify-between">
                 <Link
@@ -277,20 +330,82 @@ function PostCard({ post, currentUserId }: PostCardProps) {
                 </div>
             </div>
 
-            {/* Post Image */}
-            <div className="relative w-full bg-black">
+            {/* Post Image(s) - Animated Scrolling Carousel */}
+            <div className="relative w-full bg-black group">
                 {imageError ? (
                     <div className="w-full aspect-square flex flex-col items-center justify-center text-white/30">
                         <ImageOff className="w-12 h-12 mb-2" />
                         <span className="text-sm">Image unavailable</span>
                     </div>
                 ) : (
-                    <img
-                        src={post.image_url}
-                        alt={post.caption || 'Observation'}
-                        className="w-full object-contain max-h-[600px]"
-                        onError={() => setImageError(true)}
-                    />
+                    <>
+                        {/* Scrollable Container */}
+                        <div 
+                            ref={carouselRef}
+                            onScroll={handleScroll}
+                            className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
+                            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                        >
+                            {images.map((imageUrl, index) => (
+                                <div 
+                                    key={index}
+                                    className="w-full flex-shrink-0 snap-center snap-always"
+                                >
+                                    <img
+                                        src={imageUrl}
+                                        alt={`${post.caption || 'Post'} - Image ${index + 1}`}
+                                        className="w-full object-contain max-h-[600px]"
+                                        onError={() => setImageError(true)}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Navigation Arrows (only if multiple images) */}
+                        {hasMultipleImages && (
+                            <>
+                                <button
+                                    onClick={prevImage}
+                                    className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/70 hover:bg-black/90 rounded-full text-white opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 backdrop-blur-sm"
+                                    aria-label="Previous image"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+                                    </svg>
+                                </button>
+                                <button
+                                    onClick={nextImage}
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/70 hover:bg-black/90 rounded-full text-white opacity-0 group-hover:opacity-100 transition-all duration-200 z-10 backdrop-blur-sm"
+                                    aria-label="Next image"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </button>
+
+                                {/* Dots Indicator */}
+                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                                    {images.map((_, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => scrollToImage(index)}
+                                            className={`h-1.5 rounded-full transition-all duration-300 ${
+                                                index === currentImageIndex 
+                                                    ? 'bg-white w-6 shadow-lg' 
+                                                    : 'bg-white/50 w-1.5 hover:bg-white/70'
+                                            }`}
+                                            aria-label={`Go to image ${index + 1}`}
+                                        />
+                                    ))}
+                                </div>
+
+                                {/* Image Counter */}
+                                <div className="absolute top-3 right-3 px-2.5 py-1 bg-black/70 backdrop-blur-sm rounded-full text-white text-xs font-medium shadow-lg">
+                                    {currentImageIndex + 1} / {images.length}
+                                </div>
+                            </>
+                        )}
+                    </>
                 )}
             </div>
 
@@ -433,9 +548,10 @@ export default function FeedContainer({
      * Validates: Requirements 3.5, 3.6 - Live updates for posts
      */
     useEffect(() => {
-        // Subscribe to new posts from followed users
+        // Subscribe to new posts and observations from followed users
         const channel = supabase
             .channel(`timeline-posts-${userId}`)
+            // Posts table events
             .on(
                 'postgres_changes',
                 {
@@ -460,13 +576,18 @@ export default function FeedContainer({
                     table: 'posts',
                 },
                 (payload) => {
-                    // Update the post in the current feed if it exists
                     const updatedPostId = payload.new.id as string
-                    setPosts(prev => prev.map(post => 
-                        post.id === updatedPostId 
-                            ? { ...post, ...payload.new }
-                            : post
-                    ))
+                    // If post is marked as deleted, remove it from feed
+                    if (payload.new.is_deleted) {
+                        setPosts(prev => prev.filter(post => post.id !== updatedPostId))
+                    } else {
+                        // Update the post in the current feed if it exists
+                        setPosts(prev => prev.map(post => 
+                            post.id === updatedPostId 
+                                ? { ...post, ...payload.new }
+                                : post
+                        ))
+                    }
                 }
             )
             .on(
@@ -478,6 +599,36 @@ export default function FeedContainer({
                 },
                 (payload) => {
                     // Remove the deleted post from the feed
+                    const deletedPostId = payload.old.id as string
+                    setPosts(prev => prev.filter(post => post.id !== deletedPostId))
+                }
+            )
+            // Observations table events
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'observations',
+                },
+                (payload) => {
+                    // Check if the new observation is from a followed user
+                    const newPostUserId = payload.new.user_id as string
+                    if (followingIds.includes(newPostUserId)) {
+                        // Show notification that new posts are available
+                        setHasNewPosts(true)
+                    }
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'DELETE',
+                    schema: 'public',
+                    table: 'observations',
+                },
+                (payload) => {
+                    // Remove the deleted observation from the feed
                     const deletedPostId = payload.old.id as string
                     setPosts(prev => prev.filter(post => post.id !== deletedPostId))
                 }
@@ -496,6 +647,13 @@ export default function FeedContainer({
         setHasNewPosts(false)
         fetchPosts(1, false)
     }, [fetchPosts])
+
+    /**
+     * Handler to remove a post from the feed (optimistic delete)
+     */
+    const handleDeletePost = useCallback((postId: string) => {
+        setPosts(prev => prev.filter(post => post.id !== postId))
+    }, [])
 
     /**
      * Set up infinite scroll observer
@@ -601,7 +759,12 @@ export default function FeedContainer({
             {/* Posts Feed - Single Column */}
             <div className="space-y-0">
                 {posts.map((post) => (
-                    <PostCard key={post.id} post={post} currentUserId={userId} />
+                    <PostCard 
+                        key={post.id} 
+                        post={post} 
+                        currentUserId={userId}
+                        onDelete={handleDeletePost}
+                    />
                 ))}
             </div>
 
