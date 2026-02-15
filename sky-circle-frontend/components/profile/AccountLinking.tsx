@@ -35,7 +35,7 @@ export default function AccountLinking() {
       const accounts: LinkedAccount[] = identities.map(identity => ({
         provider: identity.provider,
         email: identity.identity_data?.email || user.email || '',
-        linked_at: identity.created_at
+        linked_at: identity.created_at || new Date().toISOString()
       }))
 
       setLinkedAccounts(accounts)

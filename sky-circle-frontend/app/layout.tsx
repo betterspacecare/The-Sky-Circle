@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import { StarField } from "@/components/StarField";
 import ToastContainer from "@/components/ui/ToastContainer";
@@ -106,7 +107,9 @@ export default function RootLayout({
       <body className="antialiased">
         {/* Google Analytics */}
         <GoogleAnalytics measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || ''} />
-        <Analytics />
+        <Suspense fallback={null}>
+          <Analytics />
+        </Suspense>
         
         {/* Background layer for stars and nebula - sits behind content for backdrop-filter */}
         <div className="cosmic-bg" aria-hidden="true" />

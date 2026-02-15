@@ -1,127 +1,314 @@
-# OAuth Account Linking Issue - Fix Guide
+# OAuth Account Linking Fix - LATEST UPDATE
 
-## Problem
+## Current Problem (After Multiple Fixes)
+When linking a Google account from the profile page, users are STILL being redirected to the reset-password page instead of back to their profile.
 
-When trying to sign in with Google using an email that already exists (created with email/password), you're being redirected to the reset-password page instead of logging in.
+## Root Cause Analysis
 
-## Root Cause
+### The Core Issue
+Supabase's `linkIdentity()` method uses the same OAuth callback flow as regular sign-in and password recovery. The callback handler needs to distinguish between:
+1. **Regular OAuth sign-in** (new user or existing user logging in)
+2. **Password recovery flow** (`type=recovery` parameter)
+3. **Account linking flow** (user adding Google to existing account)
 
-Supabase has security settings that prevent automatic account linking. When you try to sign in with Google using an email that already exists with a different auth method (email/password), Supabase blocks it by default.
+### Why Previous Fixes Didn't Work
+1. First fix: Removed redirect from home page ✅
+2. Second fix: Updated forgot-password redirect ✅
+3. Third fix: Enhanced auth callback to check recovery type ✅
+4. Fourth fix: Reordered checks to prioritize linking ✅
+5. **LATEST FIX**: Added comprehensive logging and ensured `link=true` is checked FIRST
 
-## Solution Options
+## Latest Solution Implemented
 
-### Option 1: Enable Automatic Account Linking (Recommended for Development)
+### 1. Enhanced Auth Callback (`/app/auth/callback/route.ts`)
 
-1. **Go to Supabase Dashboard**
-   - Navigate to: Authentication → Settings
-
-2. **Find "Confirm email" setting**
-   - Look for "Confirm email" toggle
-   - This should be OFF for development (users don't need to confirm email)
-
-3. **Enable Account Linking**
-   - Look for "Enable automatic linking of accounts with the same email"
-   - Toggle this ON
-
-4. **Save Changes**
-
-### Option 2: Manual Account Linking (More Secure)
-
-If you want to keep accounts separate for security:
-
-1. **User must use the same login method they signed up with**
-   - If they signed up with email/password → Use email/password to login
-   - If they signed up with Google → Use Google to login
-
-2. **Add a "Link Google Account" feature** (requires custom implementation)
-   - User logs in with email/password
-   - Goes to settings
-   - Clicks "Link Google Account"
-   - Authorizes Google
-   - Accounts are now linked
-
-### Option 3: Show Better Error Message
-
-Update the login page to detect this issue and show a helpful message:
+**Key Changes:**
+- Added comprehensive logging of ALL URL parameters
+- **CRITICAL**: Check for `link=true` parameter FIRST, before any other checks
+- Added visual indicators in logs (✅, 🔑, 👤, 🏠) for easier debugging
+- Log user identities to verify linking worked
 
 ```typescript
-const handleGoogleLogin = async () => {
-    setLoading(true)
+export async function GET(request: Request) {
+    const requestUrl = new URL(request.url)
+    const code = requestUrl.searchParams.get('code')
+    const next = requestUrl.searchParams.get('next') || '/dashboard'
+    const type = requestUrl.searchParams.get('type')
+    const isLinking = requestUrl.searchParams.get('link') === 'true'
+    
+    // Get all params for debugging
+    const allParams = Object.fromEntries(requestUrl.searchParams.entries())
+    console.log('Auth callback - All params:', allParams)
+    console.log('Auth callback - Parsed:', { code: !!code, type, isLinking })
+
+    if (code) {
+        const supabase = await createClient()
+        
+        try {
+            const { data: { session }, error } = await supabase.auth.exchangeCodeForSession(code)
+            
+            if (error) {
+                // Handle errors...
+                return NextResponse.redirect(new URL('/login?error=auth_failed', request.url))
+            }
+            
+            if (session?.user) {
+                console.log('Session user identities:', session.user.identities?.map(i => ({ provider: i.provider, id: i.id })))
+                
+                // CRITICAL: Check for account linking FIRST
+                if (isLinking) {
+                    console.log('✅ Account linking flow detected - redirecting to profile')
+                    return NextResponse.redirect(new URL('/dashboard/profile?linked=success', request.url))
+                }
+
+                // Only check for password recovery if NOT linking
+                if (type === 'recovery') {
+                    console.log('🔑 Password recovery flow - redirecting to reset-password')
+                    return NextResponse.redirect(new URL(`/reset-password`, request.url))
+                }
+                
+                // Check if new user
+                const { data: existingUser } = await supabase
+                    .from('users')
+                    .select('id')
+                    .eq('id', session.user.id)
+                    .single()
+
+                if (!existingUser) {
+                    console.log('👤 New user - redirecting to setup-profile')
+                    // Create profile and redirect to setup
+                    return NextResponse.redirect(new URL('/setup-profile', request.url))
+                }
+                
+                // Existing user
+                console.log('🏠 Existing user - redirecting to dashboard')
+                return NextResponse.redirect(new URL(next, request.url))
+            }
+        } catch (err) {
+            console.error('Unexpected error in auth callback:', err)
+            return NextResponse.redirect(new URL('/login?error=unexpected', request.url))
+        }
+    }
+
+    return NextResponse.redirect(new URL('/login', request.url))
+}
+```
+
+### 2. Improved AccountLinking Component
+
+**Key Changes:**
+- Added detailed console logging for debugging
+- Added `queryParams` to help distinguish the flow
+- Better error handling and user feedback
+
+```typescript
+const handleLinkGoogle = async () => {
+    setLinking(true)
     setError('')
+    setSuccess('')
 
     try {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
-            },
-        })
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
 
-        if (error) {
-            if (error.message.includes('already registered')) {
-                setError('This email is already registered with a password. Please sign in with your email and password instead.')
-            } else {
-                throw error
-            }
+      // Check if Google is already linked
+      const hasGoogle = linkedAccounts.some(acc => acc.provider === 'google')
+      if (hasGoogle) {
+        setError('Google account is already linked')
+        setLinking(false)
+        return
+      }
+
+      console.log('🔗 Initiating Google account linking...')
+      
+      // IMPORTANT: The link=true parameter is critical
+      const { error } = await supabase.auth.linkIdentity({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?link=true`,
+          queryParams: {
+            access_type: 'online',
+            prompt: 'select_account'
+          }
         }
+      })
+
+      if (error) {
+        console.error('❌ Link identity error:', error)
+        throw error
+      }
+
+      console.log('✅ Redirecting to Google for account linking...')
     } catch (err: any) {
-        console.error('Google login error:', err)
-        setError(err.message || 'Failed to sign in with Google')
-        setLoading(false)
+      console.error('Link error:', err)
+      setError(err.message || 'Failed to link Google account')
+      setLinking(false)
     }
 }
 ```
 
-## Immediate Fix for Your Issue
+### 3. Profile Page Success Handling
 
-### Step 1: Check Supabase Settings
-
-1. Go to Supabase Dashboard
-2. Authentication → Settings
-3. Look for these settings:
-   - **Confirm email**: Should be OFF for development
-   - **Enable automatic linking**: Should be ON if you want Google to work with existing emails
-
-### Step 2: Clear Your Browser Data
-
-1. Open DevTools (F12)
-2. Application → Storage → Clear site data
-3. Close and reopen browser
-
-### Step 3: Test Again
-
-Try these scenarios:
-
-**Scenario A: New Email**
-1. Use a Google account with an email that doesn't exist in your system
-2. Click "Continue with Google"
-3. Should work fine → Creates new account
-
-**Scenario B: Existing Email (Same Method)**
-1. If you created account with Google before
-2. Click "Continue with Google" again
-3. Should work fine → Logs you in
-
-**Scenario C: Existing Email (Different Method)**
-1. If you created account with email/password
-2. Try to login with Google using same email
-3. This is where the issue occurs
-
-## Recommended Configuration
-
-For development, use these Supabase settings:
-
-```
-Authentication → Settings:
-
-✅ Enable email provider
-✅ Enable Google provider
-❌ Confirm email (OFF for development)
-✅ Enable automatic linking of accounts (ON)
-❌ Secure email change (OFF for development)
+```typescript
+useEffect(() => {
+    fetchProfile()
+    
+    // Check for linking success message
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('linked') === 'success') {
+        alert('✅ Google account linked successfully!')
+        window.history.replaceState({}, '', '/dashboard/profile')
+    }
+}, [])
 ```
 
-For production, use these settings:
+## Testing Instructions
+
+### Test Account Linking (Primary Test)
+
+1. **Sign in with email/password**
+   - Use an account that doesn't have Google linked yet
+
+2. **Go to Profile page**
+   - Scroll down to "Linked Accounts" section in left column
+
+3. **Open Browser DevTools Console**
+   - Press F12 or right-click → Inspect
+   - Go to Console tab
+
+4. **Click "Link" button next to Google account**
+
+5. **Watch Console Logs** (should see):
+   ```
+   🔗 Initiating Google account linking...
+   ✅ Redirecting to Google for account linking...
+   ```
+
+6. **Complete Google OAuth**
+   - Select your Google account
+   - Grant permissions
+
+7. **After redirect, check Console** (should see):
+   ```
+   Auth callback - All params: { code: "abc123...", link: "true" }
+   Auth callback - Parsed: { code: true, type: null, isLinking: true }
+   Session user identities: [
+     { provider: "email", id: "..." },
+     { provider: "google", id: "..." }
+   ]
+   ✅ Account linking flow detected - redirecting to profile
+   ```
+
+8. **Verify Success**
+   - Should see alert: "✅ Google account linked successfully!"
+   - Should be on profile page (NOT reset-password)
+   - Google account should show "Linked" status
+
+### What to Look For in Console
+
+**Successful Linking Flow:**
+```
+🔗 Initiating Google account linking...
+✅ Redirecting to Google for account linking...
+[After OAuth redirect]
+Auth callback - All params: { code: "...", link: "true", ... }
+Auth callback - Parsed: { code: true, type: null, isLinking: true }
+Session user identities: [{ provider: "email", ... }, { provider: "google", ... }]
+✅ Account linking flow detected - redirecting to profile
+```
+
+**If Still Redirecting to Reset Password:**
+```
+Auth callback - All params: { code: "...", type: "recovery", ... }
+Auth callback - Parsed: { code: true, type: "recovery", isLinking: false }
+🔑 Password recovery flow - redirecting to reset-password
+```
+
+### Test Password Recovery (Should Still Work)
+
+1. **Go to forgot-password page**
+2. **Enter your email**
+3. **Check email for reset link**
+4. **Click link in email**
+5. **Should be redirected to reset-password page** (NOT profile)
+6. **Console should show:**
+   ```
+   Auth callback - All params: { code: "...", type: "recovery" }
+   🔑 Password recovery flow - redirecting to reset-password
+   ```
+
+## Debugging Guide
+
+### If Linking Still Fails
+
+1. **Check Console Logs**
+   - Look for "Auth callback - All params" log
+   - Verify `link: "true"` is present
+   - Check if `type: "recovery"` is present (it shouldn't be)
+
+2. **Check Supabase Settings**
+   - Go to Supabase Dashboard → Authentication → Settings
+   - **Disable** "Enable automatic linking of accounts with the same email"
+   - This forces manual linking only
+
+3. **Check Redirect URL in Supabase**
+   - Go to Authentication → URL Configuration
+   - Add `http://localhost:3000/auth/callback` to allowed redirect URLs
+   - Add `https://yourdomain.com/auth/callback` for production
+
+4. **Clear Browser Data**
+   - Clear cookies and cache
+   - Try in incognito mode
+
+5. **Check for Multiple Tabs**
+   - Close all other tabs of your app
+   - Sometimes session conflicts occur
+
+### Common Issues
+
+**Issue 1: `link` parameter is missing**
+- Check AccountLinking component
+- Verify `redirectTo` includes `?link=true`
+
+**Issue 2: `type=recovery` is present when linking**
+- This shouldn't happen
+- Check if Supabase is adding it
+- May need to contact Supabase support
+
+**Issue 3: User has no email identity**
+- User might have signed up with Google originally
+- Can't link Google to Google
+- Check user identities in console log
+
+## Priority Order in Callback
+
+The callback now checks in this order:
+
+1. ✅ **Check `link=true` parameter** (account linking) → Profile
+2. 🔑 **Check `type=recovery`** (password reset) → Reset Password
+3. 👤 **Check if new user** (no profile) → Setup Profile
+4. 🏠 **Existing user** → Dashboard
+
+## URL Parameters Reference
+
+| Flow | URL Parameters | Destination |
+|------|---------------|-------------|
+| Account Linking | `?link=true&code=...` | `/dashboard/profile?linked=success` |
+| Password Recovery | `?type=recovery&code=...` | `/reset-password` |
+| New User Sign-in | `?code=...` | `/setup-profile` |
+| Existing User Sign-in | `?code=...` | `/dashboard` |
+
+## Files Modified
+
+1. ✅ `/app/auth/callback/route.ts` - Enhanced callback with logging
+2. ✅ `/components/profile/AccountLinking.tsx` - Added logging and queryParams
+3. ✅ `/app/dashboard/profile/page.tsx` - Added success alert
+4. ✅ `/app/page.tsx` - Removed problematic redirect
+5. ✅ `/app/forgot-password/page.tsx` - Fixed redirect URL
+
+## Security Configuration
+
+### Supabase Settings (Production)
 
 ```
 Authentication → Settings:
@@ -129,99 +316,35 @@ Authentication → Settings:
 ✅ Enable email provider
 ✅ Enable Google provider
 ✅ Confirm email (ON for security)
-❌ Enable automatic linking (OFF for security)
+❌ Enable automatic linking (OFF - use manual linking)
 ✅ Secure email change (ON for security)
 ```
 
-## Testing Checklist
+### Supabase Settings (Development)
 
-After applying fixes:
-
-- [ ] Clear browser data
-- [ ] Test Google login with NEW email → Should create account
-- [ ] Test Google login with SAME email (if account exists) → Should login or show clear error
-- [ ] Test email/password login → Should still work
-- [ ] Check Supabase logs for any errors
-- [ ] Verify user profile is created correctly
-
-## Alternative: Use Different Emails
-
-If you want to keep things simple during development:
-
-1. **For email/password auth**: Use `yourname@example.com`
-2. **For Google OAuth**: Use `yourname@gmail.com`
-3. Keep them separate for testing
-
-## Debugging Steps
-
-If still having issues:
-
-### 1. Check Supabase Logs
 ```
-Dashboard → Logs → Auth logs
-Look for: "User already registered" or similar errors
+Authentication → Settings:
+
+✅ Enable email provider
+✅ Enable Google provider
+❌ Confirm email (OFF for easier testing)
+❌ Enable automatic linking (OFF - test manual linking)
+❌ Secure email change (OFF for easier testing)
 ```
-
-### 2. Check Browser Console
-```javascript
-// Look for errors like:
-"User already registered"
-"Email already exists"
-"Account linking not enabled"
-```
-
-### 3. Check Current User
-```typescript
-const { data: { user } } = await supabase.auth.getUser()
-console.log('Current user:', user)
-console.log('Auth method:', user?.app_metadata?.provider)
-```
-
-### 4. Check Database
-```sql
--- In Supabase SQL Editor
-SELECT 
-  id, 
-  email, 
-  raw_app_meta_data->>'provider' as provider,
-  created_at
-FROM auth.users
-WHERE email = 'your-email@example.com';
-```
-
-## Code Changes Applied
-
-I've already made these changes to your code:
-
-1. ✅ Removed problematic redirect from home page
-2. ✅ Updated auth callback to handle recovery type
-3. ✅ Fixed forgot-password redirect URL
-4. ✅ Added better error handling in Google OAuth
 
 ## Next Steps
 
-1. **Check Supabase Settings** (most important!)
-   - Enable automatic account linking for development
-   
-2. **Clear Browser Data**
-   - Remove all cookies and cache
-   
-3. **Test with Fresh Account**
-   - Use a new Google account that doesn't exist in your system
-   
-4. **If Still Issues**
-   - Check Supabase logs
-   - Share the exact error message
-   - Check which auth provider the existing account uses
+1. **Test the linking flow** with console open
+2. **Share console logs** if still having issues
+3. **Check Supabase logs** in dashboard
+4. **Verify user identities** after linking
 
 ## Summary
 
-The redirect to reset-password is likely happening because:
+This fix adds comprehensive logging and ensures the callback checks for account linking FIRST, before any other flow. The `link=true` parameter is the key to distinguishing linking from other OAuth flows.
 
-1. ❌ Account linking is disabled in Supabase
-2. ❌ You're trying to use Google with an email that exists with password auth
-3. ❌ Supabase is treating this as a security issue
-
-**Quick Fix**: Enable automatic account linking in Supabase settings (for development).
-
-**Production Fix**: Keep accounts separate and show clear error messages to users.
+**If still having issues after this fix:**
+- Share the complete console logs
+- Check Supabase dashboard logs
+- Verify the callback URL in browser address bar
+- Try in incognito mode to rule out cache issues

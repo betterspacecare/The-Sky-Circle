@@ -1,7 +1,9 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+export const dynamic = 'force-dynamic'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Telescope, Star, Users, Trophy, Calendar, Eye, Sparkles, Target, Globe, Mail, MessageCircle } from 'lucide-react'
 import Footer from '@/components/Footer'
@@ -41,7 +43,6 @@ const structuredData = {
 
 function HomeContent() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const supabase = createClient()
   
   const [stats, setStats] = useState({
@@ -252,9 +253,5 @@ function ContactCard({ icon, title, description, link }: { icon: React.ReactNode
 }
 
 export default function Home() {
-  return (
-    <Suspense fallback={<div className="min-h-screen" />}>
-      <HomeContent />
-    </Suspense>
-  )
+  return <HomeContent />
 }

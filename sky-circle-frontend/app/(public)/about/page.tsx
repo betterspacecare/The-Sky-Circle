@@ -1,5 +1,7 @@
 'use client'
 
+export const dynamic = 'force-dynamic'
+
 import { Star, Users, Telescope, Award, Heart, Target, Sparkles, Rocket, MapPin } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
