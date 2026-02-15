@@ -6,6 +6,7 @@ import { Heart, MessageCircle, Loader2, Users, ImageOff, RefreshCw } from 'lucid
 import { TimelinePost } from '@/types/social.types'
 import { fetchTimelineFeed, DEFAULT_FEED_CONFIG, FeedQuery } from '@/lib/services/feedService'
 import { createClient } from '@/lib/supabase/client'
+import CommentsSection from './CommentsSection'
 
 /**
  * FeedContainer Component
@@ -59,25 +60,62 @@ function formatCount(count: number): string {
 
 /**
  * PostCard Component
- * Displays a single post in the feed
+ * Displays a single post in Instagram-style layout
  */
 interface PostCardProps {
     post: TimelinePost;
+    currentUserId: string;
 }
 
-function PostCard({ post }: PostCardProps) {
+function PostCard({ post, currentUserId }: PostCardProps) {
+    const supabase = createClient()
     const [imageError, setImageError] = useState(false)
+    const [isLiked, setIsLiked] = useState(post.is_liked)
+    const [likesCount, setLikesCount] = useState(post.likes_count)
+    const [commentsCount, setCommentsCount] = useState(post.comments_count)
+    const [showComments, setShowComments] = useState(false)
+
+    const handleLike = async () => {
+        // Optimistic update
+        const wasLiked = isLiked
+        setIsLiked(!isLiked)
+        setLikesCount(prev => isLiked ? prev - 1 : prev + 1)
+        
+        try {
+            if (wasLiked) {
+                // Unlike
+                await supabase
+                    .from('likes')
+                    .delete()
+                    .eq('post_id', post.id)
+                    .eq('user_id', currentUserId)
+            } else {
+                // Like
+                await supabase
+                    .from('likes')
+                    .insert({
+                        post_id: post.id,
+                        user_id: currentUserId
+                    })
+            }
+        } catch (error) {
+            console.error('Error liking post:', error)
+            // Revert on error
+            setIsLiked(wasLiked)
+            setLikesCount(post.likes_count)
+        }
+    }
 
     return (
-        <div className="glass-effect rounded-2xl border border-white/10 overflow-hidden hover:border-white/20 transition-all duration-200">
+        <article className="bg-[#0a0e17] border border-white/10 rounded-lg overflow-hidden mb-4">
             {/* Post Header */}
-            <div className="p-4 flex items-center gap-3">
+            <div className="p-3 flex items-center justify-between">
                 <Link
                     href={`/dashboard/profile/${post.user_id}`}
                     className="flex items-center gap-3 flex-1 min-w-0 group"
                 >
                     {/* User Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cosmic-purple to-cosmic-blue flex items-center justify-center overflow-hidden flex-shrink-0 ring-2 ring-white/10 group-hover:ring-white/20 transition-all">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cosmic-purple to-cosmic-blue flex items-center justify-center overflow-hidden flex-shrink-0 ring-2 ring-white/10 group-hover:ring-cosmic-purple/50 transition-all">
                         {post.users.profile_photo_url ? (
                             <img
                                 src={post.users.profile_photo_url}
@@ -85,7 +123,7 @@ function PostCard({ post }: PostCardProps) {
                                 className="w-full h-full object-cover"
                             />
                         ) : (
-                            <span className="text-sm font-bold">
+                            <span className="text-xs font-bold">
                                 {(post.users.display_name || 'U')[0].toUpperCase()}
                             </span>
                         )}
@@ -94,28 +132,33 @@ function PostCard({ post }: PostCardProps) {
                     {/* User Info */}
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                            <span className="font-semibold truncate group-hover:text-cosmic-purple transition-colors">
+                            <span className="font-semibold text-sm truncate group-hover:text-cosmic-purple transition-colors">
                                 {post.users.display_name || 'Anonymous'}
                             </span>
-                            {/* Following Badge - Requirement 4.1 */}
+                            {/* Following Badge */}
                             {post.is_from_following && (
-                                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-cosmic-purple/20 text-cosmic-purple border border-cosmic-purple/30">
-                                    <Users className="w-3 h-3" />
-                                    Following
+                                <span className="text-xs text-cosmic-purple">• Following</span>
+                            )}
+                            {/* Observation Badge */}
+                            {post.post_type === 'observation' && post.category && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-cosmic-blue/20 text-cosmic-blue font-medium">
+                                    {post.category}
                                 </span>
                             )}
                         </div>
-                        <span className="text-xs text-white/50">
-                            {formatDate(post.created_at)}
-                        </span>
                     </div>
                 </Link>
+                
+                {/* Time */}
+                <span className="text-xs text-white/40">
+                    {formatDate(post.created_at)}
+                </span>
             </div>
 
             {/* Post Image */}
-            <div className="relative aspect-square bg-black/20">
+            <div className="relative w-full bg-black">
                 {imageError ? (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-white/30">
+                    <div className="w-full aspect-square flex flex-col items-center justify-center text-white/30">
                         <ImageOff className="w-12 h-12 mb-2" />
                         <span className="text-sm">Image unavailable</span>
                     </div>
@@ -123,35 +166,69 @@ function PostCard({ post }: PostCardProps) {
                     <img
                         src={post.image_url}
                         alt={post.caption || 'Observation'}
-                        className="w-full h-full object-cover"
+                        className="w-full object-contain max-h-[600px]"
                         onError={() => setImageError(true)}
                     />
                 )}
             </div>
 
-            {/* Post Footer */}
-            <div className="p-4">
-                {/* Engagement Stats */}
-                <div className="flex items-center gap-4 mb-3">
-                    <div className={`flex items-center gap-1.5 ${post.is_liked ? 'text-red-400' : 'text-white/60'}`}>
-                        <Heart className={`w-5 h-5 ${post.is_liked ? 'fill-current' : ''}`} />
-                        <span className="text-sm font-medium">{formatCount(post.likes_count)}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-white/60">
-                        <MessageCircle className="w-5 h-5" />
-                        <span className="text-sm font-medium">{formatCount(post.comments_count)}</span>
-                    </div>
+            {/* Action Buttons */}
+            <div className="p-3">
+                <div className="flex items-center gap-4 mb-2">
+                    <button
+                        onClick={handleLike}
+                        className={`flex items-center gap-1.5 transition-all hover:scale-110 active:scale-95 ${
+                            isLiked ? 'text-red-500' : 'text-white/80 hover:text-white'
+                        }`}
+                    >
+                        <Heart className={`w-6 h-6 ${isLiked ? 'fill-current' : ''}`} />
+                    </button>
+                    <button
+                        onClick={() => setShowComments(!showComments)}
+                        className="flex items-center gap-1.5 text-white/80 hover:text-white transition-all hover:scale-110 active:scale-95"
+                    >
+                        <MessageCircle className="w-6 h-6" />
+                    </button>
                 </div>
+
+                {/* Likes Count */}
+                {likesCount > 0 && (
+                    <div className="mb-2">
+                        <span className="font-semibold text-sm">{formatCount(likesCount)} {likesCount === 1 ? 'like' : 'likes'}</span>
+                    </div>
+                )}
 
                 {/* Caption */}
                 {post.caption && (
-                    <p className="text-sm text-white/80 line-clamp-3">
-                        <span className="font-semibold mr-2">{post.users.display_name || 'Anonymous'}</span>
-                        {post.caption}
-                    </p>
+                    <div className="text-sm mb-1">
+                        <Link href={`/dashboard/profile/${post.user_id}`} className="font-semibold hover:text-cosmic-purple transition-colors">
+                            {post.users.display_name || 'Anonymous'}
+                        </Link>
+                        <span className="ml-2 text-white/90">{post.caption}</span>
+                    </div>
+                )}
+
+                {/* View Comments Button */}
+                {commentsCount > 0 && !showComments && (
+                    <button
+                        onClick={() => setShowComments(true)}
+                        className="text-sm text-white/40 hover:text-white/60 transition-colors"
+                    >
+                        View all {commentsCount} {commentsCount === 1 ? 'comment' : 'comments'}
+                    </button>
                 )}
             </div>
-        </div>
+
+            {/* Comments Section */}
+            {showComments && (
+                <CommentsSection
+                    postId={post.id}
+                    currentUserId={currentUserId}
+                    initialCommentsCount={commentsCount}
+                    onCommentsCountChange={setCommentsCount}
+                />
+            )}
+        </article>
     )
 }
 
@@ -387,37 +464,41 @@ export default function FeedContainer({
     }
 
     return (
-        <div className="space-y-6">
+        <div className="max-w-[470px] mx-auto">
             {/* New Posts Notification Banner */}
             {hasNewPosts && (
                 <button
                     onClick={handleRefreshFeed}
-                    className="w-full py-3 px-4 glass-effect rounded-xl border border-cosmic-purple/30 flex items-center justify-center gap-2 text-cosmic-purple hover:bg-cosmic-purple/10 transition-all animate-in fade-in slide-in-from-top-2 duration-300"
+                    className="w-full py-2.5 px-4 mb-4 bg-cosmic-purple/10 border border-cosmic-purple/30 rounded-lg flex items-center justify-center gap-2 text-cosmic-purple hover:bg-cosmic-purple/20 transition-all"
                 >
                     <RefreshCw className="w-4 h-4" />
-                    <span className="font-medium">New posts available - Click to refresh</span>
+                    <span className="font-medium text-sm">New posts available</span>
                 </button>
             )}
 
-            {/* Posts Grid/List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Posts Feed - Single Column */}
+            <div className="space-y-0">
                 {posts.map((post) => (
-                    <PostCard key={post.id} post={post} />
+                    <PostCard key={post.id} post={post} currentUserId={userId} />
                 ))}
             </div>
 
             {/* Load More Trigger / Loading More State */}
-            <div ref={loadMoreRef} className="py-4">
+            <div ref={loadMoreRef} className="py-8">
                 {isLoadingMore && (
                     <div className="flex items-center justify-center gap-3">
-                        <Loader2 className="w-6 h-6 text-cosmic-purple animate-spin" />
-                        <span className="text-white/50">Loading more posts...</span>
+                        <Loader2 className="w-5 h-5 text-cosmic-purple animate-spin" />
+                        <span className="text-white/50 text-sm">Loading more...</span>
                     </div>
                 )}
                 {!hasMore && posts.length > 0 && (
-                    <p className="text-center text-white/40 text-sm">
-                        You've reached the end of your feed
-                    </p>
+                    <div className="text-center">
+                        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 text-white/40 text-sm">
+                            <div className="w-1 h-1 rounded-full bg-white/40"></div>
+                            <span>You're all caught up</span>
+                            <div className="w-1 h-1 rounded-full bg-white/40"></div>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>

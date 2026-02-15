@@ -84,6 +84,8 @@ export interface TimelinePost {
     caption: string | null;
     image_url: string;
     created_at: string;
+    post_type?: 'observation' | 'post'; // observation = from observations table, post = from posts table
+    category?: string; // only for observations
     users: {
         id: string;
         display_name: string | null;

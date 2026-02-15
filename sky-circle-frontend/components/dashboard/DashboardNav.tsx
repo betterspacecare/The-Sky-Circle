@@ -119,7 +119,6 @@ export default function DashboardNav() {
         { href: '/dashboard/events', label: 'Events', icon: Calendar },
         
         // Social & Community
-        { href: '/dashboard/community', label: 'Community', icon: Users },
         { href: '/dashboard/discover', label: 'Discover', icon: Users },
         { href: '/dashboard/groups', label: 'Guilds', icon: UsersRound },
         

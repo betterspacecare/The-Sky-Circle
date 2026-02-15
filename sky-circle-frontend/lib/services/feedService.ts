@@ -95,6 +95,7 @@ export function calculateEngagementScore(
 
 /**
  * Fetches posts from users that the current user follows
+ * Fetches BOTH observations and posts, merges them together
  * Validates: Requirements 4.1, 4.4
  * 
  * @param userId - The current user's ID
@@ -117,8 +118,8 @@ export async function fetchFollowedUsersPosts(
   const supabase = createClient();
   const offset = (page - 1) * pageSize;
 
-  // Fetch posts from followed users with user data, likes count, and comments count
-  const { data: posts, error } = await supabase
+  // Fetch observations from followed users
+  const { data: observations, error: obsError } = await supabase
     .from('observations')
     .select(`
       id,
@@ -137,12 +138,87 @@ export async function fetchFollowedUsersPosts(
     .order('created_at', { ascending: false })
     .range(offset, offset + pageSize - 1);
 
-  if (error) {
-    return { data: null, error: error.message };
+  // Fetch posts from followed users
+  const { data: posts, error: postsError } = await supabase
+    .from('posts')
+    .select(`
+      id,
+      user_id,
+      caption,
+      image_url,
+      created_at,
+      is_deleted,
+      users!posts_user_id_fkey (
+        id,
+        display_name,
+        profile_photo_url
+      )
+    `)
+    .in('user_id', followingIds)
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + pageSize - 1);
+
+  if (obsError && postsError) {
+    return { data: null, error: obsError.message };
   }
 
-  // Get likes and comments counts for each post
-  const timelinePosts = await Promise.all(
+  // Process observations
+  const observationPosts = await Promise.all(
+    (observations || []).map(async (post) => {
+      const [likesResult, commentsResult, isLikedResult] = await Promise.all([
+        supabase
+          .from('likes')
+          .select('*', { count: 'exact', head: true })
+          .eq('post_id', post.id),
+        supabase
+          .from('comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('post_id', post.id),
+        supabase
+          .from('likes')
+          .select('id')
+          .eq('post_id', post.id)
+          .eq('user_id', userId)
+          .maybeSingle(),
+      ]);
+
+      const likesCount = likesResult.count ?? 0;
+      const commentsCount = commentsResult.count ?? 0;
+      const isLiked = isLikedResult.data !== null;
+
+      const userData = post.users;
+      const user = Array.isArray(userData) ? userData[0] : userData;
+
+      return {
+        id: post.id,
+        user_id: post.user_id,
+        caption: post.notes,
+        image_url: post.photo_url || '',
+        created_at: post.created_at,
+        post_type: 'observation' as const,
+        category: post.category,
+        users: {
+          id: user?.id || post.user_id,
+          display_name: user?.display_name || null,
+          profile_photo_url: user?.profile_photo_url || null,
+        },
+        likes_count: likesCount,
+        comments_count: commentsCount,
+        is_liked: isLiked,
+        is_from_following: true,
+        engagement_score: calculateEngagementScore(
+          likesCount,
+          commentsCount,
+          post.created_at,
+          DEFAULT_FEED_CONFIG.engagementWeights
+        ),
+      } as TimelinePost;
+    })
+  );
+
+  // Process posts
+  const regularPosts = await Promise.all(
     (posts || []).map(async (post) => {
       const [likesResult, commentsResult, isLikedResult] = await Promise.all([
         supabase
@@ -165,16 +241,16 @@ export async function fetchFollowedUsersPosts(
       const commentsCount = commentsResult.count ?? 0;
       const isLiked = isLikedResult.data !== null;
 
-      // Handle both array and single object cases from Supabase join
       const userData = post.users;
       const user = Array.isArray(userData) ? userData[0] : userData;
 
       return {
         id: post.id,
         user_id: post.user_id,
-        caption: post.notes,
-        image_url: post.photo_url || '',
+        caption: post.caption,
+        image_url: post.image_url || '',
         created_at: post.created_at,
+        post_type: 'post' as const,
         users: {
           id: user?.id || post.user_id,
           display_name: user?.display_name || null,
@@ -194,7 +270,12 @@ export async function fetchFollowedUsersPosts(
     })
   );
 
-  return { data: timelinePosts, error: null };
+  // Merge and sort by created_at
+  const allPosts = [...observationPosts, ...regularPosts].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
+  return { data: allPosts, error: null };
 }
 
 
@@ -222,6 +303,7 @@ const INTEREST_TO_CATEGORY_MAP: Record<string, string[]> = {
 
 /**
  * Fetches trending posts from non-followed users, filtered by interests
+ * Fetches BOTH observations and posts
  * Validates: Requirements 4.2, 4.3, 4.6
  * 
  * @param userId - The current user's ID
@@ -249,11 +331,10 @@ export async function fetchTrendingPosts(
       categories.push(...mappedCategories);
     }
   }
-  // Remove duplicates
   const uniqueCategories = [...new Set(categories)];
 
-  // Build query for trending posts
-  let query = supabase
+  // Fetch observations
+  let obsQuery = supabase
     .from('observations')
     .select(`
       id,
@@ -271,27 +352,98 @@ export async function fetchTrendingPosts(
     .order('created_at', { ascending: false })
     .range(offset, offset + pageSize - 1);
 
-  // Exclude followed users and self
   if (excludeUserIds.length > 0) {
-    // Use NOT IN filter for excluding users
-    query = query.not('user_id', 'in', `(${excludeUserIds.join(',')})`);
+    obsQuery = obsQuery.not('user_id', 'in', `(${excludeUserIds.join(',')})`);
   }
 
-  // Filter by categories if user has interests that map to categories
-  // Validates: Requirement 4.3 - Filter trending posts by user interests
-  // Validates: Requirement 4.6 - If no interests, show general trending
   if (uniqueCategories.length > 0) {
-    query = query.in('category', uniqueCategories);
+    obsQuery = obsQuery.in('category', uniqueCategories);
   }
 
-  const { data: posts, error } = await query;
+  const { data: observations } = await obsQuery;
 
-  if (error) {
-    return { data: null, error: error.message };
+  // Fetch posts (no category filter for posts)
+  let postsQuery = supabase
+    .from('posts')
+    .select(`
+      id,
+      user_id,
+      caption,
+      image_url,
+      created_at,
+      is_deleted,
+      users!posts_user_id_fkey (
+        id,
+        display_name,
+        profile_photo_url
+      )
+    `)
+    .eq('is_deleted', false)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + pageSize - 1);
+
+  if (excludeUserIds.length > 0) {
+    postsQuery = postsQuery.not('user_id', 'in', `(${excludeUserIds.join(',')})`);
   }
 
-  // Get likes and comments counts for each post and calculate engagement score
-  const timelinePosts = await Promise.all(
+  const { data: posts } = await postsQuery;
+
+  // Process observations
+  const observationPosts = await Promise.all(
+    (observations || []).map(async (post) => {
+      const [likesResult, commentsResult, isLikedResult] = await Promise.all([
+        supabase
+          .from('likes')
+          .select('*', { count: 'exact', head: true })
+          .eq('post_id', post.id),
+        supabase
+          .from('comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('post_id', post.id),
+        supabase
+          .from('likes')
+          .select('id')
+          .eq('post_id', post.id)
+          .eq('user_id', userId)
+          .maybeSingle(),
+      ]);
+
+      const likesCount = likesResult.count ?? 0;
+      const commentsCount = commentsResult.count ?? 0;
+      const isLiked = isLikedResult.data !== null;
+
+      const userData = post.users;
+      const user = Array.isArray(userData) ? userData[0] : userData;
+
+      return {
+        id: post.id,
+        user_id: post.user_id,
+        caption: post.notes,
+        image_url: post.photo_url || '',
+        created_at: post.created_at,
+        post_type: 'observation' as const,
+        category: post.category,
+        users: {
+          id: user?.id || post.user_id,
+          display_name: user?.display_name || null,
+          profile_photo_url: user?.profile_photo_url || null,
+        },
+        likes_count: likesCount,
+        comments_count: commentsCount,
+        is_liked: isLiked,
+        is_from_following: false,
+        engagement_score: calculateEngagementScore(
+          likesCount,
+          commentsCount,
+          post.created_at,
+          DEFAULT_FEED_CONFIG.engagementWeights
+        ),
+      } as TimelinePost;
+    })
+  );
+
+  // Process posts
+  const regularPosts = await Promise.all(
     (posts || []).map(async (post) => {
       const [likesResult, commentsResult, isLikedResult] = await Promise.all([
         supabase
@@ -314,16 +466,16 @@ export async function fetchTrendingPosts(
       const commentsCount = commentsResult.count ?? 0;
       const isLiked = isLikedResult.data !== null;
 
-      // Handle both array and single object cases from Supabase join
       const userData = post.users;
       const user = Array.isArray(userData) ? userData[0] : userData;
 
       return {
         id: post.id,
         user_id: post.user_id,
-        caption: post.notes,
-        image_url: post.photo_url || '',
+        caption: post.caption,
+        image_url: post.image_url || '',
         created_at: post.created_at,
+        post_type: 'post' as const,
         users: {
           id: user?.id || post.user_id,
           display_name: user?.display_name || null,
@@ -343,10 +495,11 @@ export async function fetchTrendingPosts(
     })
   );
 
-  // Sort by engagement score (trending = high engagement)
-  timelinePosts.sort((a, b) => b.engagement_score - a.engagement_score);
+  // Merge and sort by engagement score
+  const allPosts = [...observationPosts, ...regularPosts];
+  allPosts.sort((a, b) => b.engagement_score - a.engagement_score);
 
-  return { data: timelinePosts, error: null };
+  return { data: allPosts, error: null };
 }
 
 
