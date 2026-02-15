@@ -349,12 +349,12 @@ function PostCard({ post, currentUserId, onDelete }: PostCardProps) {
                             {images.map((imageUrl, index) => (
                                 <div 
                                     key={index}
-                                    className="w-full flex-shrink-0 snap-center snap-always"
+                                    className="w-full flex-shrink-0 snap-center snap-always aspect-square"
                                 >
                                     <img
                                         src={imageUrl}
                                         alt={`${post.caption || 'Post'} - Image ${index + 1}`}
-                                        className="w-full object-contain max-h-[600px]"
+                                        className="w-full h-full object-cover"
                                         onError={() => setImageError(true)}
                                     />
                                 </div>
