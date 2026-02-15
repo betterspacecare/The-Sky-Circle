@@ -52,6 +52,23 @@ function HomeContent() {
     badges: 0
   })
   const [loading, setLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setIsAuthenticated(!!session)
+      } catch (error) {
+        console.error('Error checking auth:', error)
+      } finally {
+        setCheckingAuth(false)
+      }
+    }
+
+    checkAuth()
+  }, [])
 
   useEffect(() => {
     async function fetchStats() {
@@ -101,14 +118,24 @@ function HomeContent() {
           <p className="text-lg md:text-xl text-gray-400 mb-12 max-w-2xl mx-auto">
             Join a vibrant community of astronomy enthusiasts. Log observations, earn badges, complete missions, and explore the cosmos together.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Link href="/signup" className="inline-block px-8 py-4 bg-gradient-to-r from-cosmic-purple to-cosmic-pink hover:opacity-90 rounded-full font-semibold text-lg text-white transition-all transform hover:scale-105 shadow-lg">
-              Get Started Free
-            </Link>
-            <Link href="/login" className="inline-block px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-semibold text-lg text-white transition-all">
-              Sign In
-            </Link>
-          </div>
+          {!checkingAuth && (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+              {isAuthenticated ? (
+                <Link href="/dashboard" className="inline-block px-8 py-4 bg-gradient-to-r from-cosmic-purple to-cosmic-pink hover:opacity-90 rounded-full font-semibold text-lg text-white transition-all transform hover:scale-105 shadow-lg">
+                  Go to Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link href="/signup" className="inline-block px-8 py-4 bg-gradient-to-r from-cosmic-purple to-cosmic-pink hover:opacity-90 rounded-full font-semibold text-lg text-white transition-all transform hover:scale-105 shadow-lg">
+                    Get Started Free
+                  </Link>
+                  <Link href="/login" className="inline-block px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-semibold text-lg text-white transition-all">
+                    Sign In
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
           <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
             <div>
               <div className="text-3xl font-bold text-cosmic-purple">5</div>
