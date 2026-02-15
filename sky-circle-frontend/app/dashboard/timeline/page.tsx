@@ -291,11 +291,6 @@ export default function TimelinePage() {
     return (
         <div className="py-0">
             <div className="max-w-[630px] mx-auto">
-                {/* Page Header - Instagram Style */}
-                <div className="mb-6 pb-4 border-b border-white/10">
-                    <h1 className="text-2xl font-bold">Timeline</h1>
-                </div>
-
                 {/* Create Post Card */}
                 <div className="bg-[#0a0e17] border border-white/10 rounded-lg p-4 mb-4">
                     <div className="flex gap-3">
