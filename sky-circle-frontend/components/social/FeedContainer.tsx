@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { Heart, MessageCircle, Loader2, Users, ImageOff, RefreshCw } from 'lucide-react'
+import { Heart, MessageCircle, Loader2, Users, ImageOff, RefreshCw, MoreHorizontal, Bookmark, Share2, Trash2 } from 'lucide-react'
 import { TimelinePost } from '@/types/social.types'
 import { fetchTimelineFeed, DEFAULT_FEED_CONFIG, FeedQuery } from '@/lib/services/feedService'
 import { createClient } from '@/lib/supabase/client'
@@ -74,6 +74,28 @@ function PostCard({ post, currentUserId }: PostCardProps) {
     const [likesCount, setLikesCount] = useState(post.likes_count)
     const [commentsCount, setCommentsCount] = useState(post.comments_count)
     const [showComments, setShowComments] = useState(false)
+    const [showMenu, setShowMenu] = useState(false)
+    const [isBookmarked, setIsBookmarked] = useState(false)
+    const menuRef = useRef<HTMLDivElement>(null)
+
+    // Load bookmark status from localStorage
+    useEffect(() => {
+        const bookmarks = JSON.parse(localStorage.getItem('bookmarked_posts') || '[]')
+        setIsBookmarked(bookmarks.includes(post.id))
+    }, [post.id])
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+                setShowMenu(false)
+            }
+        }
+        if (showMenu) {
+            document.addEventListener('mousedown', handleClickOutside)
+        }
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [showMenu])
 
     const handleLike = async () => {
         // Optimistic update
@@ -104,6 +126,67 @@ function PostCard({ post, currentUserId }: PostCardProps) {
             setIsLiked(wasLiked)
             setLikesCount(post.likes_count)
         }
+    }
+
+    const handleBookmark = () => {
+        const bookmarks = JSON.parse(localStorage.getItem('bookmarked_posts') || '[]')
+        let newBookmarks
+        if (isBookmarked) {
+            newBookmarks = bookmarks.filter((id: string) => id !== post.id)
+        } else {
+            newBookmarks = [...bookmarks, post.id]
+        }
+        localStorage.setItem('bookmarked_posts', JSON.stringify(newBookmarks))
+        setIsBookmarked(!isBookmarked)
+        setShowMenu(false)
+    }
+
+    const handleShare = async () => {
+        const shareData = {
+            title: `Check out this post by ${post.users?.display_name || 'Observer'}`,
+            text: post.caption || 'Amazing astronomy photo!',
+            url: `${window.location.origin}/dashboard/timeline?post=${post.id}`
+        }
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData)
+            } else {
+                await navigator.clipboard.writeText(shareData.url)
+                alert('Link copied to clipboard!')
+            }
+        } catch (error) {
+            console.log('Share cancelled')
+        }
+        setShowMenu(false)
+    }
+
+    const handleDelete = async () => {
+        if (!confirm('Delete this post?')) return
+        
+        try {
+            // Check if it's a post or observation
+            if (post.post_type === 'post') {
+                await supabase
+                    .from('posts')
+                    .update({ is_deleted: true })
+                    .eq('id', post.id)
+                    .eq('user_id', currentUserId)
+            } else {
+                await supabase
+                    .from('observations')
+                    .delete()
+                    .eq('id', post.id)
+                    .eq('user_id', currentUserId)
+            }
+            
+            // Reload to show updated feed
+            window.location.reload()
+        } catch (error) {
+            console.error('Error deleting post:', error)
+            alert('Failed to delete post')
+        }
+        setShowMenu(false)
     }
 
     return (
@@ -149,10 +232,49 @@ function PostCard({ post, currentUserId }: PostCardProps) {
                     </div>
                 </Link>
                 
-                {/* Time */}
-                <span className="text-xs text-white/40">
-                    {formatDate(post.created_at)}
-                </span>
+                {/* 3-Dot Menu */}
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-white/40">
+                        {formatDate(post.created_at)}
+                    </span>
+                    <div className="relative" ref={menuRef}>
+                        <button
+                            onClick={() => setShowMenu(!showMenu)}
+                            className="p-1.5 hover:bg-white/5 rounded-full transition-colors"
+                        >
+                            <MoreHorizontal className="w-5 h-5 text-white/40" />
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {showMenu && (
+                            <div className="absolute right-0 top-full mt-1 w-48 bg-[#0a0e17] border border-white/10 rounded-lg shadow-xl z-50 py-1">
+                                <button
+                                    onClick={handleBookmark}
+                                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/5 flex items-center gap-3 transition-colors"
+                                >
+                                    <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current text-cosmic-gold' : ''}`} />
+                                    {isBookmarked ? 'Saved' : 'Save'}
+                                </button>
+                                <button
+                                    onClick={handleShare}
+                                    className="w-full px-4 py-2 text-left text-sm hover:bg-white/5 flex items-center gap-3 transition-colors"
+                                >
+                                    <Share2 className="w-4 h-4" />
+                                    Share
+                                </button>
+                                {post.user_id === currentUserId && (
+                                    <button
+                                        onClick={handleDelete}
+                                        className="w-full px-4 py-2 text-left text-sm hover:bg-white/5 flex items-center gap-3 transition-colors text-red-400"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                        Delete
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Post Image */}
