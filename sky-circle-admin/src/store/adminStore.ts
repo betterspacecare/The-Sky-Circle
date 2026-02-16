@@ -478,8 +478,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
                     // Development: admin on 5173, frontend on 3000
                     frontendUrl = 'http://localhost:3000'
                 } else if (currentUrl.includes('admin')) {
-                    // Production: admin.domain.com -> domain.com
-                    frontendUrl = currentUrl.replace('admin.', '')
+                    // Production: admin.domain.com -> www.domain.com (handle www redirect)
+                    frontendUrl = currentUrl.replace('admin.', 'www.')
                 } else {
                     // Fallback: assume same domain
                     frontendUrl = currentUrl
