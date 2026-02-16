@@ -42,6 +42,23 @@ export default function AboutPage() {
         badges: 0
     })
     const [loading, setLoading] = useState(true)
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [checkingAuth, setCheckingAuth] = useState(true)
+
+    useEffect(() => {
+        async function checkAuth() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession()
+                setIsAuthenticated(!!session)
+            } catch (error) {
+                console.error('Error checking auth:', error)
+            } finally {
+                setCheckingAuth(false)
+            }
+        }
+
+        checkAuth()
+    }, [])
 
     useEffect(() => {
         async function fetchStats() {
@@ -234,21 +251,35 @@ export default function AboutPage() {
                 <p className="text-xl text-white/70 mb-10 max-w-2xl mx-auto">
                     Start your cosmic journey today and connect with thousands of fellow stargazers around the world.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Link 
-                        href="/signup" 
-                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-cosmic-purple to-cosmic-pink rounded-full font-bold hover:scale-105 transition-all shadow-lg text-lg"
-                    >
-                        Get Started Free
-                        <Star className="w-5 h-5" />
-                    </Link>
-                    <Link 
-                        href="/login" 
-                        className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-bold transition-all text-lg"
-                    >
-                        Sign In
-                    </Link>
-                </div>
+                {!checkingAuth && (
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        {isAuthenticated ? (
+                            <Link 
+                                href="/dashboard" 
+                                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-cosmic-purple to-cosmic-pink rounded-full font-bold hover:scale-105 transition-all shadow-lg text-lg"
+                            >
+                                Go to Dashboard
+                                <Star className="w-5 h-5" />
+                            </Link>
+                        ) : (
+                            <>
+                                <Link 
+                                    href="/signup" 
+                                    className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-cosmic-purple to-cosmic-pink rounded-full font-bold hover:scale-105 transition-all shadow-lg text-lg"
+                                >
+                                    Get Started Free
+                                    <Star className="w-5 h-5" />
+                                </Link>
+                                <Link 
+                                    href="/login" 
+                                    className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full font-bold transition-all text-lg"
+                                >
+                                    Sign In
+                                </Link>
+                            </>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     )

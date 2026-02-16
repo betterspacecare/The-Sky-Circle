@@ -73,11 +73,13 @@ export function LoginPage({ onForgotPassword }: LoginPageProps) {
             <div className="w-full max-w-md relative z-10">
                 {/* Logo */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center mb-4 relative">
-                        <Sparkles className="w-16 h-16 text-purple-400" />
-                        <div className="absolute inset-0 blur-2xl bg-purple-500/40" />
+                    <div className="inline-flex items-center justify-center mb-4">
+                        <img 
+                            src="/SkyGuild_Logo.png" 
+                            alt="SkyGuild Admin" 
+                            className="h-16 w-auto object-contain drop-shadow-2xl"
+                        />
                     </div>
-                    <h1 className="text-4xl font-black text-gradient mb-2">SkyGuild</h1>
                     <p className="text-white/40 font-bold tracking-widest text-xs uppercase">Admin Control Center</p>
                 </div>
 

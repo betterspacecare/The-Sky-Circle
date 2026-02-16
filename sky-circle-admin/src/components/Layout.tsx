@@ -137,15 +137,14 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
                 {/* Logo */}
                 <div className="flex items-center justify-between p-5 border-b border-purple-500/20 bg-gradient-to-r from-purple-500/5 to-pink-500/5">
                     <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                                <Sparkles className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="absolute inset-0 blur-xl bg-purple-500/30 -z-10" />
-                        </div>
+                        <img 
+                            src="/SkyGuild_Icon.png" 
+                            alt="SkyGuild Admin" 
+                            className="w-8 h-8 object-contain"
+                        />
                         <div>
-                            <span className="text-xl font-black text-gradient">SkyGuild</span>
-                            <span className="block text-[9px] text-purple-400/60 font-black tracking-[0.2em]">ADMIN PANEL</span>
+                            <span className="text-sm font-black text-white uppercase tracking-wider">Admin</span>
+                            <span className="block text-[8px] text-purple-400/60 font-black tracking-[0.2em]">MISSION CONTROL</span>
                         </div>
                     </div>
                     <button

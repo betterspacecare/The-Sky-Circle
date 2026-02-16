@@ -1,36 +1,86 @@
+'use client'
+
 import Footer from '@/components/Footer'
 import Link from 'next/link'
 import { Star } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function PublicLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
+    const supabase = createClient()
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+    const [checkingAuth, setCheckingAuth] = useState(true)
+
+    useEffect(() => {
+        async function checkAuth() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession()
+                setIsAuthenticated(!!session)
+            } catch (error) {
+                console.error('Error checking auth:', error)
+            } finally {
+                setCheckingAuth(false)
+            }
+        }
+
+        checkAuth()
+    }, [])
+
     return (
         <div className="min-h-screen flex flex-col">
             {/* Simple Nav */}
-            <nav className="border-b border-white/5 bg-black/20 backdrop-blur-sm">
-                <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-cosmic-purple to-cosmic-pink flex items-center justify-center">
-                            <Star className="w-4 h-4 text-white" />
+            <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0e17]/95 backdrop-blur-xl border-b border-white/10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16 sm:h-20">
+                        <Link href="/" className="group">
+                            <img 
+                                src="/SkyGuild_Logo.png" 
+                                alt="SkyGuild" 
+                                className="h-8 w-auto object-contain group-hover:scale-105 transition-all duration-300"
+                            />
+                        </Link>
+                        <div className="flex items-center gap-2 sm:gap-4">
+                            <Link href="/about" className="text-sm text-gray-400 hover:text-white transition-colors hidden sm:block">
+                                About
+                            </Link>
+                            <Link href="/faq" className="text-sm text-gray-400 hover:text-white transition-colors hidden sm:block">
+                                FAQ
+                            </Link>
+                            {!checkingAuth && (
+                                <>
+                                    {isAuthenticated ? (
+                                        <Link 
+                                            href="/dashboard" 
+                                            className="px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-cosmic-purple to-cosmic-pink hover:opacity-90 rounded-full text-sm font-semibold text-white transition-all"
+                                        >
+                                            Dashboard
+                                        </Link>
+                                    ) : (
+                                        <>
+                                            <Link href="/login" className="text-sm text-gray-400 hover:text-white transition-colors">
+                                                Login
+                                            </Link>
+                                            <Link 
+                                                href="/signup" 
+                                                className="px-4 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-cosmic-purple to-cosmic-pink hover:opacity-90 rounded-full text-sm font-semibold text-white transition-all"
+                                            >
+                                                Sign Up
+                                            </Link>
+                                        </>
+                                    )}
+                                </>
+                            )}
                         </div>
-                        <span className="text-lg font-black tracking-tight">SkyGuild</span>
-                    </Link>
-                    <div className="flex items-center gap-4">
-                        <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors">
-                            Login
-                        </Link>
-                        <Link 
-                            href="/signup" 
-                            className="px-4 py-2 bg-cosmic-purple/20 text-cosmic-purple rounded-lg text-sm font-medium hover:bg-cosmic-purple/30 transition-all"
-                        >
-                            Sign Up
-                        </Link>
                     </div>
                 </div>
             </nav>
+            
+            {/* Spacer for fixed header */}
+            <div className="h-16 sm:h-20" />
             
             <main className="flex-1">
                 {children}

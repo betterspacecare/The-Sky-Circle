@@ -163,10 +163,13 @@ export default function SignupPage() {
             <div className="w-full max-w-md">
                 {/* Logo and Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 mb-4 animate-float">
-                        <Telescope className="w-8 h-8 text-white" />
+                    <div className="inline-flex items-center justify-center mb-4 animate-float">
+                        <img 
+                            src="/SkyGuild_Logo.png" 
+                            alt="SkyGuild" 
+                            className="h-16 w-auto object-contain drop-shadow-2xl"
+                        />
                     </div>
-                    <h1 className="text-4xl font-bold text-gradient mb-2">SkyGuild</h1>
                     <p className="text-gray-400">Look up. Stay curious.</p>
                 </div>
 

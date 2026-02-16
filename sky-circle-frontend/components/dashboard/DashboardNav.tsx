@@ -135,19 +135,12 @@ export default function DashboardNav() {
                     <div className="bg-[#0a0e17]/95 backdrop-blur-xl rounded-2xl px-4 py-3 border border-white/10">
                         <div className="flex items-center justify-between">
                             {/* Logo */}
-                            <Link href="/dashboard" className="flex items-center gap-2 sm:gap-3 group">
-                                <div className="relative">
-                                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-primary-200 via-danger-100 to-secondary-200 flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-[0_0_20px_rgba(125,73,248,0.4)]">
-                                        <Telescope className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                                    </div>
-                                    <div className="absolute -top-1 -right-1 w-3 h-3">
-                                        <Sparkles className="w-3 h-3 text-warning-100 animate-pulse" />
-                                    </div>
-                                </div>
-                                <div className="hidden xs:block sm:block">
-                                    <span className="font-black text-base sm:text-lg tracking-tight text-surface-50 block leading-none">SkyGuild</span>
-                                    <span className="text-[8px] sm:text-[9px] font-bold text-surface-400 uppercase tracking-[0.15em] sm:tracking-[0.2em] hidden sm:block">Look up. Stay curious.</span>
-                                </div>
+                            <Link href="/dashboard" className="group">
+                                <img 
+                                    src="/SkyGuild_Logo.png" 
+                                    alt="SkyGuild" 
+                                    className="h-8 sm:h-9 w-auto object-contain group-hover:scale-105 transition-all duration-300"
+                                />
                             </Link>
 
                             {/* Desktop & Tablet Nav Items */}
