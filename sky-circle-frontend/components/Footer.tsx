@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Star, Mail, MapPin, Instagram, Twitter, Youtube } from 'lucide-react'
+import { Mail, MapPin, Instagram, Twitter, Youtube } from 'lucide-react'
 
 export default function Footer() {
     return (
@@ -10,11 +10,12 @@ export default function Footer() {
                 {/* Mobile: Compact single row */}
                 <div className="md:hidden">
                     <div className="flex items-center justify-between mb-4">
-                        <Link href="/" className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cosmic-purple to-cosmic-pink flex items-center justify-center">
-                                <Star className="w-4 h-4 text-white" />
-                            </div>
-                            <span className="text-base font-bold">SkyGuild</span>
+                        <Link href="/" className="group">
+                            <img 
+                                src="/SkyGuild_Logo.png" 
+                                alt="SkyGuild" 
+                                className="h-7 w-auto object-contain"
+                            />
                         </Link>
                         <div className="flex gap-2">
                             <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg glass-inner flex items-center justify-center">
@@ -40,11 +41,12 @@ export default function Footer() {
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
                         {/* Brand */}
                         <div className="space-y-3">
-                            <Link href="/" className="flex items-center gap-2">
-                                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cosmic-purple to-cosmic-pink flex items-center justify-center">
-                                    <Star className="w-4 h-4 text-white" />
-                                </div>
-                                <span className="text-lg font-bold">SkyGuild</span>
+                            <Link href="/" className="inline-block group">
+                                <img 
+                                    src="/SkyGuild_Logo.png" 
+                                    alt="SkyGuild" 
+                                    className="h-8 w-auto object-contain group-hover:scale-105 transition-transform"
+                                />
                             </Link>
                             <p className="text-xs text-white/50 leading-relaxed">
                                 A community of stargazers exploring the cosmos together.
