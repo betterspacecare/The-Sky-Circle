@@ -141,6 +141,21 @@ export async function followUser(
     return { data: null, error: error.message };
   }
 
+  // Trigger webhook for follow.created
+  if (data) {
+    try {
+      const { triggerWebhookAction } = await import('@/app/actions/webhooks')
+      await triggerWebhookAction('follow.created', {
+        follow_id: data.id,
+        follower_id: data.follower_id,
+        following_id: data.following_id,
+        created_at: data.created_at
+      })
+    } catch (error) {
+      console.error('Webhook trigger failed:', error)
+    }
+  }
+
   return { data: data as Follow, error: null };
 }
 

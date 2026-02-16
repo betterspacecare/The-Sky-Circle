@@ -184,7 +184,7 @@ export default function NewObservationPage() {
             const selectedCategory = categories.find(c => c.name === formData.category)
             const points = selectedCategory?.points || 10
 
-            const { error: insertError } = await supabase
+            const { data: newObservation, error: insertError } = await supabase
                 .from('observations')
                 .insert({
                     user_id: user.id,
@@ -196,8 +196,28 @@ export default function NewObservationPage() {
                     photo_url: photo_url || null,
                     points_awarded: points,
                 })
+                .select()
+                .single()
 
             if (insertError) throw insertError
+
+            // Trigger webhook for observation.created
+            if (newObservation) {
+                try {
+                    const { triggerWebhookAction } = await import('@/app/actions/webhooks')
+                    await triggerWebhookAction('observation.created', {
+                        observation_id: newObservation.id,
+                        user_id: newObservation.user_id,
+                        object_name: newObservation.object_name,
+                        category: newObservation.category,
+                        location: newObservation.location,
+                        points_awarded: newObservation.points_awarded,
+                        created_at: newObservation.created_at
+                    })
+                } catch (error) {
+                    console.error('Webhook trigger failed:', error)
+                }
+            }
 
             // Update user points
             const { data: profile } = await supabase

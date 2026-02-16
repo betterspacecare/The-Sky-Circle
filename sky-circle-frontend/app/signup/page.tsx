@@ -53,7 +53,7 @@ export default function SignupPage() {
                 const newReferralCode = generateReferralCode()
 
                 // Create user profile
-                const { error: profileError } = await supabase
+                const { data: newUser, error: profileError } = await supabase
                     .from('users')
                     .insert({
                         id: authData.user.id,
@@ -61,8 +61,25 @@ export default function SignupPage() {
                         referral_code: newReferralCode,
                         referred_by: referralCode || null,
                     })
+                    .select()
+                    .single()
 
                 if (profileError) throw profileError
+
+                // Trigger webhook for user.created
+                if (newUser) {
+                    try {
+                        const { triggerWebhookAction } = await import('@/app/actions/webhooks')
+                        await triggerWebhookAction('user.created', {
+                            user_id: newUser.id,
+                            email: newUser.email,
+                            referral_code: newUser.referral_code,
+                            created_at: newUser.created_at
+                        })
+                    } catch (error) {
+                        console.error('Webhook trigger failed:', error)
+                    }
+                }
 
                 // If user was referred, create referral record
                 if (referralCode) {
@@ -73,11 +90,27 @@ export default function SignupPage() {
                         .single()
 
                     if (referrer) {
-                        await supabase.from('referrals').insert({
+                        const { data: newReferral } = await supabase.from('referrals').insert({
                             referrer_id: referrer.id,
                             referred_user_id: authData.user.id,
                             reward_points: 50,
-                        })
+                        }).select().single()
+
+                        // Trigger webhook for referral.completed
+                        if (newReferral) {
+                            try {
+                                const { triggerWebhookAction } = await import('@/app/actions/webhooks')
+                                await triggerWebhookAction('referral.completed', {
+                                    referral_id: newReferral.id,
+                                    referrer_id: newReferral.referrer_id,
+                                    referred_user_id: newReferral.referred_user_id,
+                                    reward_points: newReferral.reward_points,
+                                    created_at: newReferral.created_at
+                                })
+                            } catch (error) {
+                                console.error('Webhook trigger failed:', error)
+                            }
+                        }
 
                         // Update referrer's points
                         await supabase.rpc('increment_user_points', {
