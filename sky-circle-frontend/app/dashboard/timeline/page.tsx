@@ -309,7 +309,7 @@ export default function TimelinePage() {
 
     return (
         <div className="py-0">
-            <div className="max-w-[630px] mx-auto">
+            <div className="max-w-[630px] mx-auto px-0 sm:px-4">
                 {/* Create Post Card */}
                 <div className="bg-[#0a0e17] border border-white/10 rounded-lg p-4 mb-4">
                     <div className="flex gap-3">

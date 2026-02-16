@@ -150,8 +150,8 @@ export default function DashboardNav() {
                                 </div>
                             </Link>
 
-                            {/* Desktop Nav Items */}
-                            <div className="hidden md:flex items-center gap-1 bg-white/5 rounded-xl p-1">
+                            {/* Desktop & Tablet Nav Items */}
+                            <div className="hidden lg:flex items-center gap-1 bg-white/5 rounded-xl p-1">
                                 {navItems.map((item) => {
                                     const Icon = item.icon
                                     const isActive = pathname === item.href
@@ -159,7 +159,7 @@ export default function DashboardNav() {
                                         <Link
                                             key={item.href}
                                             href={item.href}
-                                            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-300 ${isActive
+                                            className={`flex items-center gap-2 px-3 xl:px-4 py-2.5 rounded-lg transition-all duration-300 ${isActive
                                                 ? 'bg-gradient-to-r from-primary-200/30 to-danger-100/20 text-surface-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]'
                                                 : 'text-surface-400 hover:text-surface-50 hover:bg-white/5'
                                                 }`}
@@ -215,10 +215,10 @@ export default function DashboardNav() {
                                     <LogOut className="w-5 h-5" />
                                 </button>
 
-                                {/* Mobile Menu Toggle */}
+                                {/* Mobile & Tablet Menu Toggle */}
                                 <button
                                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                                    className="md:hidden p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-surface-400"
+                                    className="lg:hidden p-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-all text-surface-400"
                                 >
                                     <Menu className="w-5 h-5" />
                                 </button>
@@ -228,9 +228,9 @@ export default function DashboardNav() {
                 </div>
             </nav>
 
-            {/* Mobile Slide-in Menu */}
+            {/* Mobile & Tablet Slide-in Menu */}
             <div 
-                className={`fixed inset-0 z-[60] md:hidden transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                className={`fixed inset-0 z-[60] lg:hidden transition-opacity duration-300 ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
             >
                 {/* Backdrop */}
                 <div 

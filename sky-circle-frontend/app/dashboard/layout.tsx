@@ -22,7 +22,7 @@ export default async function DashboardLayout({
         <NotificationProvider userId={user.id}>
             <div className="min-h-screen flex flex-col relative">
                 <DashboardNav />
-                <main className="max-w-7xl mx-auto px-4 py-8 flex-1 w-full relative z-10">
+                <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full relative z-10">
                     {children}
                 </main>
                 <Footer />
