@@ -409,11 +409,30 @@ export default function CommunityFeedPage() {
                 .from(STORAGE_BUCKETS.POST_IMAGES)
                 .getPublicUrl(fileName)
 
-            await supabase.from('posts').insert({
+            const { data: newPost, error: insertError } = await supabase.from('posts').insert({
                 user_id: user.id,
                 caption: newCaption,
                 image_url: publicUrl
-            })
+            }).select().single()
+
+            if (insertError) throw insertError
+
+            // Trigger webhook for post.created event
+            if (newPost) {
+                try {
+                    const { triggerWebhookAction } = await import('@/app/actions/webhooks')
+                    await triggerWebhookAction('post.created', {
+                        post_id: newPost.id,
+                        user_id: newPost.user_id,
+                        caption: newPost.caption,
+                        image_url: newPost.image_url,
+                        created_at: newPost.created_at
+                    })
+                } catch (webhookError) {
+                    console.error('Webhook trigger failed:', webhookError)
+                    // Don't fail the post creation if webhook fails
+                }
+            }
 
             setNewCaption('')
             setSelectedImage(null)
@@ -441,7 +460,25 @@ export default function CommunityFeedPage() {
         if (currentlyLiked) {
             await supabase.from('likes').delete().eq('post_id', postId).eq('user_id', user.id)
         } else {
-            await supabase.from('likes').insert({ post_id: postId, user_id: user.id })
+            const { data: newLike } = await supabase.from('likes').insert({ 
+                post_id: postId, 
+                user_id: user.id 
+            }).select().single()
+
+            // Trigger webhook for like.created event
+            if (newLike) {
+                try {
+                    const { triggerWebhookAction } = await import('@/app/actions/webhooks')
+                    await triggerWebhookAction('like.created', {
+                        like_id: newLike.id,
+                        post_id: postId,
+                        user_id: user.id,
+                        created_at: newLike.created_at
+                    })
+                } catch (error) {
+                    console.error('Webhook trigger failed:', error)
+                }
+            }
         }
     }
 
@@ -476,7 +513,28 @@ export default function CommunityFeedPage() {
         if (!user) return
 
         setSubmittingComment(postId)
-        await supabase.from('comments').insert({ post_id: postId, user_id: user.id, content })
+        const { data: newComment } = await supabase.from('comments').insert({ 
+            post_id: postId, 
+            user_id: user.id, 
+            content 
+        }).select().single()
+
+        // Trigger webhook for comment.created event
+        if (newComment) {
+            try {
+                const { triggerWebhookAction } = await import('@/app/actions/webhooks')
+                await triggerWebhookAction('comment.created', {
+                    comment_id: newComment.id,
+                    post_id: postId,
+                    user_id: user.id,
+                    content: content,
+                    created_at: newComment.created_at
+                })
+            } catch (error) {
+                console.error('Webhook trigger failed:', error)
+            }
+        }
+
         setCommentInputs(prev => ({ ...prev, [postId]: '' }))
         setSubmittingComment(null)
     }
