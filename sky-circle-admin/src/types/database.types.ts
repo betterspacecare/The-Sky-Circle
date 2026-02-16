@@ -155,4 +155,145 @@ export interface DashboardStats {
     reportedPosts: number
     newUsersThisWeek: number
     observationsThisWeek: number
+    totalFollows: number
+    totalGears: number
+    totalInterests: number
+}
+
+// Webhook Types
+export type WebhookEvent = 
+    | 'user.created'
+    | 'user.updated'
+    | 'user.deleted'
+    | 'observation.created'
+    | 'observation.updated'
+    | 'observation.deleted'
+    | 'post.created'
+    | 'post.reported'
+    | 'post.deleted'
+    | 'event.created'
+    | 'event.updated'
+    | 'event.rsvp'
+    | 'mission.completed'
+    | 'badge.earned'
+    | 'follow.created'
+    | 'follow.deleted'
+    | 'comment.created'
+    | 'like.created'
+    | 'referral.completed'
+
+export type WebhookStatus = 'active' | 'inactive' | 'failed'
+
+export interface Webhook {
+    id: string
+    name: string
+    description: string | null
+    url: string
+    events: WebhookEvent[]
+    secret: string | null
+    is_active: boolean
+    status: WebhookStatus
+    retry_count: number
+    last_triggered_at: string | null
+    last_success_at: string | null
+    last_error: string | null
+    created_at: string
+    updated_at: string
+}
+
+export interface WebhookLog {
+    id: string
+    webhook_id: string
+    event_type: WebhookEvent
+    payload: Json
+    response_status: number | null
+    response_body: string | null
+    error_message: string | null
+    retry_count: number
+    created_at: string
+    webhook?: Webhook
+}
+
+// API Keys Types
+export interface ApiKey {
+    id: string
+    name: string
+    description: string | null
+    key_hash: string
+    key_prefix: string
+    permissions: string[]
+    is_active: boolean
+    last_used_at: string | null
+    expires_at: string | null
+    created_by: string | null
+    created_at: string
+    updated_at: string
+}
+
+export interface ApiKeyLog {
+    id: string
+    api_key_id: string
+    endpoint: string
+    method: string
+    status_code: number | null
+    ip_address: string | null
+    user_agent: string | null
+    request_body: Json | null
+    response_time_ms: number | null
+    error_message: string | null
+    created_at: string
+}
+
+export interface ApiKeyUsageStats {
+    id: string
+    name: string
+    key_prefix: string
+    is_active: boolean
+    total_requests: number
+    successful_requests: number
+    failed_requests: number
+    avg_response_time_ms: number
+    last_request_at: string | null
+}
+
+// Social Features Types
+export type GearType = 'telescope' | 'camera' | 'mount' | 'eyepiece' | 'filter' | 'accessory'
+
+export interface UserGear {
+    id: string
+    user_id: string
+    name: string
+    gear_type: GearType
+    brand: string | null
+    model: string | null
+    notes: string | null
+    created_at: string
+    updated_at: string
+    user?: User
+}
+
+export interface Follow {
+    id: string
+    follower_id: string
+    following_id: string
+    created_at: string
+    follower?: User
+    following?: User
+}
+
+export interface Interest {
+    id: string
+    name: string
+    display_name: string
+    category: string | null
+    created_at: string
+}
+
+export interface UserInterest {
+    id: string
+    user_id: string
+    interest_id: string
+    created_at: string
+    user?: User
+    interest?: Interest
 }

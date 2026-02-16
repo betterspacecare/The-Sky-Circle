@@ -17,6 +17,11 @@ import { ApplicationsPage } from './pages/ApplicationsPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { FeedbackPage } from './pages/FeedbackPage'
+import { GearsPage } from './pages/GearsPage'
+import { FollowsPage } from './pages/FollowsPage'
+import { InterestsPage } from './pages/InterestsPage'
+import { WebhooksPage } from './pages/WebhooksPage'
+import { ApiKeysPage } from './pages/ApiKeysPage'
 import { Loader2 } from 'lucide-react'
 
 function AuthWrapper({ children }: { children: React.ReactNode }) {
@@ -145,6 +150,31 @@ function AppRoutes() {
                 <Route path="/feedback" element={
                     <Layout currentPage="feedback" onNavigate={handleNavigate}>
                         <FeedbackPage />
+                    </Layout>
+                } />
+                <Route path="/gears" element={
+                    <Layout currentPage="gears" onNavigate={handleNavigate}>
+                        <GearsPage />
+                    </Layout>
+                } />
+                <Route path="/follows" element={
+                    <Layout currentPage="follows" onNavigate={handleNavigate}>
+                        <FollowsPage />
+                    </Layout>
+                } />
+                <Route path="/interests" element={
+                    <Layout currentPage="interests" onNavigate={handleNavigate}>
+                        <InterestsPage />
+                    </Layout>
+                } />
+                <Route path="/webhooks" element={
+                    <Layout currentPage="webhooks" onNavigate={handleNavigate}>
+                        <WebhooksPage />
+                    </Layout>
+                } />
+                <Route path="/api-keys" element={
+                    <Layout currentPage="api-keys" onNavigate={handleNavigate}>
+                        <ApiKeysPage />
                     </Layout>
                 } />
 

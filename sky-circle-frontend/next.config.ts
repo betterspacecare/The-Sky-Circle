@@ -50,6 +50,28 @@ const nextConfig: NextConfig = {
             value: 'camera=(), microphone=(), geolocation=()'
           }
         ]
+      },
+      // CORS headers for API routes (allow admin panel access)
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*' // In production, set to 'https://admin.skyguild.club'
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization'
+          },
+          {
+            key: 'Access-Control-Max-Age',
+            value: '86400'
+          }
+        ]
       }
     ]
   },

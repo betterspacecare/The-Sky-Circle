@@ -81,6 +81,9 @@ export function DashboardPage() {
         { label: 'Active Missions', value: stats?.activeMissions || 0, icon: Target, gradient: 'from-orange-500 to-amber-500' },
         { label: 'Reported Posts', value: stats?.reportedPosts || 0, icon: AlertTriangle, gradient: 'from-red-500 to-rose-500' },
         { label: 'New Explorers', value: stats?.newUsersThisWeek || 0, icon: TrendingUp, gradient: 'from-indigo-500 to-purple-500' },
+        { label: 'Total Follows', value: stats?.totalFollows || 0, icon: Users, gradient: 'from-cyan-500 to-blue-500' },
+        { label: 'User Gears', value: stats?.totalGears || 0, icon: Star, gradient: 'from-pink-500 to-purple-500' },
+        { label: 'Interests', value: stats?.totalInterests || 0, icon: Sparkles, gradient: 'from-amber-500 to-yellow-500' },
     ]
 
     return (
@@ -104,23 +107,54 @@ export function DashboardPage() {
                 </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {statCards.map((stat) => {
-                    const Icon = stat.icon
-                    return (
-                        <div
-                            key={stat.label}
-                            className="glass-card rounded-2xl p-4 group hover:scale-105 transition-all duration-300"
-                        >
-                            <div className={`w-12 h-12 bg-gradient-to-br ${stat.gradient} rounded-xl flex items-center justify-center mb-3 group-hover:shadow-lg group-hover:shadow-purple-500/20 transition-all`}>
-                                <Icon className="w-6 h-6 text-white" />
+            {/* Stats Grid - Core Metrics */}
+            <div>
+                <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Star className="w-4 h-4" />
+                    Core Metrics
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {statCards.slice(0, 6).map((stat) => {
+                        const Icon = stat.icon
+                        return (
+                            <div
+                                key={stat.label}
+                                className="glass-card rounded-2xl p-4 group hover:scale-105 transition-all duration-300"
+                            >
+                                <div className={`w-12 h-12 bg-gradient-to-br ${stat.gradient} rounded-xl flex items-center justify-center mb-3 group-hover:shadow-lg group-hover:shadow-purple-500/20 transition-all`}>
+                                    <Icon className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="text-3xl font-black text-white mb-1">{stat.value}</div>
+                                <div className="text-xs text-white/40 font-medium uppercase tracking-wider">{stat.label}</div>
                             </div>
-                            <div className="text-3xl font-black text-white mb-1">{stat.value}</div>
-                            <div className="text-xs text-white/40 font-medium uppercase tracking-wider">{stat.label}</div>
-                        </div>
-                    )
-                })}
+                        )
+                    })}
+                </div>
+            </div>
+
+            {/* Stats Grid - Social Features */}
+            <div>
+                <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Social Features
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {statCards.slice(6).map((stat) => {
+                        const Icon = stat.icon
+                        return (
+                            <div
+                                key={stat.label}
+                                className="glass-card rounded-2xl p-4 group hover:scale-105 transition-all duration-300"
+                            >
+                                <div className={`w-12 h-12 bg-gradient-to-br ${stat.gradient} rounded-xl flex items-center justify-center mb-3 group-hover:shadow-lg group-hover:shadow-purple-500/20 transition-all`}>
+                                    <Icon className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="text-3xl font-black text-white mb-1">{stat.value}</div>
+                                <div className="text-xs text-white/40 font-medium uppercase tracking-wider">{stat.label}</div>
+                            </div>
+                        )
+                    })}
+                </div>
             </div>
 
             {/* Charts */}

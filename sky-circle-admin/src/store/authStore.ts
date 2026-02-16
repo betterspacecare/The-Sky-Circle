@@ -9,6 +9,7 @@ interface UserProfile {
     id: string
     email: string
     display_name: string | null
+    profile_photo_url?: string | null
     role: UserRole
 }
 
