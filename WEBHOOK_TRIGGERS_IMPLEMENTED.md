@@ -2,6 +2,28 @@
 
 ## ✅ Fully Implemented (7 Events)
 
+### Webhook Payload Structure
+
+All webhooks now include user details automatically:
+
+```json
+{
+  "event": "event.name",
+  "timestamp": "2024-01-01T12:00:00Z",
+  "data": {
+    // Event-specific data
+  },
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "display_name": "John Doe",
+    "profile_photo_url": "https://..."
+  }
+}
+```
+
+The `user` object is automatically included for all events that have a `user_id` in the data.
+
 ### 1. user.created
 **Location:** `sky-circle-frontend/app/signup/page.tsx`
 **Triggers when:** New user signs up
@@ -15,6 +37,12 @@
     "email": "user@example.com",
     "referral_code": "ABC123",
     "created_at": "2024-01-01T12:00:00Z"
+  },
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "display_name": "John Doe",
+    "profile_photo_url": "https://..."
   }
 }
 ```
@@ -33,6 +61,12 @@
     "referred_user_id": "uuid",
     "reward_points": 50,
     "created_at": "2024-01-01T12:00:00Z"
+  },
+  "user": {
+    "id": "uuid",
+    "email": "referrer@example.com",
+    "display_name": "Referrer Name",
+    "profile_photo_url": "https://..."
   }
 }
 ```
@@ -53,12 +87,18 @@
     "location": "Backyard",
     "points_awarded": 50,
     "created_at": "2024-01-01T12:00:00Z"
+  },
+  "user": {
+    "id": "uuid",
+    "email": "observer@example.com",
+    "display_name": "Star Gazer",
+    "profile_photo_url": "https://..."
   }
 }
 ```
 
 ### 4. post.created
-**Location:** `sky-circle-frontend/app/dashboard/community/page.tsx`
+**Location:** `sky-circle-frontend/app/dashboard/community/page.tsx` & `timeline/page.tsx`
 **Triggers when:** User creates new post
 **Payload:**
 ```json
@@ -70,7 +110,14 @@
     "user_id": "uuid",
     "caption": "Amazing night sky!",
     "image_url": "https://...",
+    "images": ["https://...", "https://..."],
     "created_at": "2024-01-01T12:00:00Z"
+  },
+  "user": {
+    "id": "uuid",
+    "email": "poster@example.com",
+    "display_name": "Night Sky Fan",
+    "profile_photo_url": "https://..."
   }
 }
 ```
@@ -88,6 +135,12 @@
     "post_id": "uuid",
     "user_id": "uuid",
     "created_at": "2024-01-01T12:00:00Z"
+  },
+  "user": {
+    "id": "uuid",
+    "email": "liker@example.com",
+    "display_name": "Astronomy Lover",
+    "profile_photo_url": "https://..."
   }
 }
 ```
@@ -106,6 +159,12 @@
     "user_id": "uuid",
     "content": "Great shot!",
     "created_at": "2024-01-01T12:00:00Z"
+  },
+  "user": {
+    "id": "uuid",
+    "email": "commenter@example.com",
+    "display_name": "Helpful User",
+    "profile_photo_url": "https://..."
   }
 }
 ```
@@ -123,6 +182,12 @@
     "follower_id": "uuid",
     "following_id": "uuid",
     "created_at": "2024-01-01T12:00:00Z"
+  },
+  "user": {
+    "id": "uuid",
+    "email": "follower@example.com",
+    "display_name": "New Follower",
+    "profile_photo_url": "https://..."
   }
 }
 ```
@@ -233,3 +298,89 @@ vercel --prod
 - Event management pending
 
 The most important events are now live! The remaining events can be added following the same pattern as needed.
+
+## Email Automation Examples
+
+With user details included in every webhook, you can easily set up email automations:
+
+### Example 1: Welcome Email (Zapier)
+**Trigger:** `user.created`
+**Action:** Send email via Gmail/SendGrid
+```
+To: {{user.email}}
+Subject: Welcome to SkyGuild, {{user.display_name}}!
+Body: 
+Hi {{user.display_name}},
+
+Welcome to SkyGuild! Your account has been created successfully.
+
+Your referral code: {{data.referral_code}}
+
+Start exploring the cosmos!
+```
+
+### Example 2: New Follower Notification
+**Trigger:** `follow.created`
+**Action:** Send email to the followed user
+```
+To: [Fetch from database using data.following_id]
+Subject: {{user.display_name}} started following you!
+Body:
+{{user.display_name}} ({{user.email}}) is now following you on SkyGuild.
+
+View their profile: https://skyguild.club/profile/{{user.id}}
+```
+
+### Example 3: Post Engagement Alert
+**Trigger:** `like.created` or `comment.created`
+**Action:** Send email to post author
+```
+To: [Fetch post author email]
+Subject: {{user.display_name}} {{event == 'like.created' ? 'liked' : 'commented on'}} your post!
+Body:
+{{user.display_name}} engaged with your post.
+
+{{#if event == 'comment.created'}}
+Comment: {{data.content}}
+{{/if}}
+
+View post: https://skyguild.club/post/{{data.post_id}}
+```
+
+### Example 4: Observation Milestone
+**Trigger:** `observation.created`
+**Action:** Check count and send congratulations
+```
+To: {{user.email}}
+Subject: Great observation, {{user.display_name}}!
+Body:
+You observed {{data.object_name}} and earned {{data.points_awarded}} points!
+
+Keep exploring the night sky!
+```
+
+### Using Make.com for Advanced Workflows
+1. Webhook receives event with user details
+2. Check conditions (e.g., user's 10th post)
+3. Send personalized email
+4. Update CRM
+5. Post to social media
+6. Log to analytics
+
+### Using n8n for Custom Logic
+```javascript
+// n8n workflow
+if (webhook.event === 'post.created') {
+  // Get post count for user
+  const postCount = await getPostCount(webhook.user.id)
+  
+  if (postCount === 10) {
+    // Send milestone email
+    await sendEmail({
+      to: webhook.user.email,
+      subject: `Congrats ${webhook.user.display_name}! 10 posts milestone!`,
+      body: `You've shared 10 amazing posts with the community!`
+    })
+  }
+}
+```

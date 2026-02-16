@@ -19,6 +19,31 @@ interface WebhookPayload {
   event: WebhookEvent
   timestamp: string
   data: any
+  user?: {
+    id: string
+    email: string
+    display_name: string | null
+    profile_photo_url: string | null
+  }
+}
+
+/**
+ * Fetch user details for webhook payload
+ */
+async function getUserDetails(userId: string) {
+  try {
+    const supabase = await createClient()
+    const { data: user } = await supabase
+      .from('users')
+      .select('id, email, display_name, profile_photo_url')
+      .eq('id', userId)
+      .single()
+    
+    return user || null
+  } catch (error) {
+    console.error('Error fetching user details:', error)
+    return null
+  }
 }
 
 /**
@@ -39,11 +64,18 @@ export async function triggerWebhooks(event: WebhookEvent, data: any) {
       return
     }
 
-    // Prepare payload
+    // Fetch user details if user_id is present in data
+    let userDetails = null
+    if (data.user_id) {
+      userDetails = await getUserDetails(data.user_id)
+    }
+
+    // Prepare payload with user details
     const payload: WebhookPayload = {
       event,
       timestamp: new Date().toISOString(),
-      data
+      data,
+      ...(userDetails && { user: userDetails })
     }
 
     // Send to all matching webhooks

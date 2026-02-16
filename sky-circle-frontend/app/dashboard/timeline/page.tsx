@@ -210,6 +210,25 @@ export default function TimelinePage() {
 
             console.log('Post created successfully:', newPost)
 
+            // Trigger webhook for post.created event
+            if (newPost) {
+                try {
+                    const { triggerWebhookAction } = await import('@/app/actions/webhooks')
+                    await triggerWebhookAction('post.created', {
+                        post_id: newPost.id,
+                        user_id: newPost.user_id,
+                        caption: newPost.caption,
+                        image_url: newPost.image_url,
+                        images: newPost.images,
+                        created_at: newPost.created_at
+                    })
+                    console.log('Webhook triggered for post.created')
+                } catch (webhookError) {
+                    console.error('Webhook trigger failed:', webhookError)
+                    // Don't fail the post creation if webhook fails
+                }
+            }
+
             // Clear form
             setNewCaption('')
             setSelectedImages([])
