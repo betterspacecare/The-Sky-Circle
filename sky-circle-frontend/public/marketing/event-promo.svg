@@ -1,0 +1,78 @@
+<svg width="1080" height="1350" viewBox="0 0 1080 1350" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="eventBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0e17"/>
+      <stop offset="40%" style="stop-color:#1a0a30"/>
+      <stop offset="100%" style="stop-color:#0a0e17"/>
+    </linearGradient>
+    <linearGradient id="eventAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7d49f8"/>
+      <stop offset="100%" style="stop-color:#f11856"/>
+    </linearGradient>
+    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#f11856;stop-opacity:0.6"/>
+      <stop offset="50%" style="stop-color:#f11856;stop-opacity:0.2"/>
+      <stop offset="100%" style="stop-color:#f11856;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1080" height="1350" fill="url(#eventBg)"/>
+  
+  <!-- Stars -->
+  <g opacity="0.6">
+    <circle cx="100" cy="100" r="2" fill="white"/>
+    <circle cx="250" cy="200" r="1.5" fill="white"/>
+    <circle cx="400" cy="80" r="2" fill="white"/>
+    <circle cx="600" cy="150" r="1" fill="white"/>
+    <circle cx="800" cy="100" r="2.5" fill="white"/>
+    <circle cx="950" cy="200" r="1.5" fill="white"/>
+    <circle cx="150" cy="1200" r="2" fill="white"/>
+    <circle cx="350" cy="1280" r="1.5" fill="white"/>
+    <circle cx="700" cy="1250" r="2" fill="white"/>
+    <circle cx="900" cy="1300" r="1" fill="white"/>
+  </g>
+  
+  <!-- Moon glow effect -->
+  <circle cx="540" cy="400" r="250" fill="url(#moonGlow)"/>
+  
+  <!-- Blood Moon -->
+  <circle cx="540" cy="400" r="150" fill="#8B0000"/>
+  <circle cx="540" cy="400" r="150" fill="url(#moonGlow)" opacity="0.5"/>
+  <!-- Moon craters -->
+  <circle cx="490" cy="360" r="25" fill="#6B0000" opacity="0.5"/>
+  <circle cx="580" cy="420" r="35" fill="#6B0000" opacity="0.4"/>
+  <circle cx="520" cy="480" r="20" fill="#6B0000" opacity="0.5"/>
+  <circle cx="600" cy="350" r="15" fill="#6B0000" opacity="0.4"/>
+  
+  <!-- Event badge -->
+  <rect x="390" y="100" width="300" height="40" rx="20" fill="url(#eventAccent)"/>
+  <text x="540" y="127" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="white" text-anchor="middle">🌙 ASTRONOMY EVENT</text>
+  
+  <!-- Event title -->
+  <text x="540" y="680" font-family="system-ui, sans-serif" font-size="56" font-weight="900" fill="white" text-anchor="middle">Total Lunar</text>
+  <text x="540" y="750" font-family="system-ui, sans-serif" font-size="56" font-weight="900" fill="#f11856" text-anchor="middle">Eclipse</text>
+  
+  <!-- Blood Moon subtitle -->
+  <text x="540" y="810" font-family="system-ui, sans-serif" font-size="28" fill="white" opacity="0.8" text-anchor="middle">"Blood Moon" - Fully Visible from India</text>
+  
+  <!-- Date and time -->
+  <rect x="290" y="870" width="500" height="120" rx="20" fill="white" fill-opacity="0.05" stroke="white" stroke-opacity="0.1"/>
+  <text x="540" y="915" font-family="system-ui, sans-serif" font-size="36" font-weight="700" fill="white" text-anchor="middle">March 3, 2026</text>
+  <text x="540" y="960" font-family="system-ui, sans-serif" font-size="24" fill="white" opacity="0.7" text-anchor="middle">5:30 AM IST • Naya Raipur</text>
+  
+  <!-- Features -->
+  <g transform="translate(540, 1050)">
+    <text x="-200" y="0" font-family="system-ui, sans-serif" font-size="18" fill="white" opacity="0.7">✓ 58 min total eclipse</text>
+    <text x="50" y="0" font-family="system-ui, sans-serif" font-size="18" fill="white" opacity="0.7">✓ Free entry</text>
+    <text x="-200" y="40" font-family="system-ui, sans-serif" font-size="18" fill="white" opacity="0.7">✓ Photography session</text>
+    <text x="50" y="40" font-family="system-ui, sans-serif" font-size="18" fill="white" opacity="0.7">✓ Expert guidance</text>
+  </g>
+  
+  <!-- CTA -->
+  <rect x="340" y="1150" width="400" height="70" rx="35" fill="url(#eventAccent)"/>
+  <text x="540" y="1195" font-family="system-ui, sans-serif" font-size="22" font-weight="700" fill="white" text-anchor="middle">RSVP on SkyGuild</text>
+  
+  <!-- Website -->
+  <text x="540" y="1280" font-family="system-ui, sans-serif" font-size="20" fill="white" opacity="0.5" text-anchor="middle">www.skyguild.club</text>
+</svg>

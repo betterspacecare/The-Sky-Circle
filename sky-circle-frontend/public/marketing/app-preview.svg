@@ -1,0 +1,79 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mainBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0e17"/>
+      <stop offset="100%" style="stop-color:#1a1040"/>
+    </linearGradient>
+    <linearGradient id="cardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1f1f3a"/>
+      <stop offset="100%" style="stop-color:#15152a"/>
+    </linearGradient>
+    <linearGradient id="btnGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#7d49f8"/>
+      <stop offset="100%" style="stop-color:#f11856"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="800" fill="url(#mainBg)"/>
+  
+  <!-- Phone mockup -->
+  <g transform="translate(600, 400)">
+    <!-- Phone frame -->
+    <rect x="-150" y="-300" width="300" height="600" rx="40" fill="#1a1a2e" stroke="#333" stroke-width="3"/>
+    
+    <!-- Screen -->
+    <rect x="-135" y="-280" width="270" height="560" rx="30" fill="url(#cardGrad)"/>
+    
+    <!-- Status bar -->
+    <text x="-110" y="-255" font-family="system-ui, sans-serif" font-size="12" fill="white" opacity="0.6">9:41</text>
+    <circle cx="100" cy="-258" r="8" fill="white" opacity="0.3"/>
+    
+    <!-- App header -->
+    <rect x="-135" y="-240" width="270" height="60" fill="#0a0e17"/>
+    <text x="0" y="-200" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="white" text-anchor="middle">SkyGuild</text>
+    
+    <!-- Stats cards -->
+    <rect x="-120" y="-160" width="115" height="70" rx="12" fill="#252545"/>
+    <text x="-62" y="-130" font-family="system-ui, sans-serif" font-size="24" font-weight="700" fill="#7d49f8" text-anchor="middle">42</text>
+    <text x="-62" y="-110" font-family="system-ui, sans-serif" font-size="10" fill="white" opacity="0.6" text-anchor="middle">Observations</text>
+    
+    <rect x="5" y="-160" width="115" height="70" rx="12" fill="#252545"/>
+    <text x="62" y="-130" font-family="system-ui, sans-serif" font-size="24" font-weight="700" fill="#f11856" text-anchor="middle">8</text>
+    <text x="62" y="-110" font-family="system-ui, sans-serif" font-size="10" fill="white" opacity="0.6" text-anchor="middle">Badges</text>
+    
+    <!-- Recent observation card -->
+    <rect x="-120" y="-70" width="240" height="100" rx="12" fill="#252545"/>
+    <text x="-105" y="-45" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white">Recent Observation</text>
+    <text x="-105" y="-20" font-family="system-ui, sans-serif" font-size="14" fill="white" opacity="0.8">Orion Nebula (M42)</text>
+    <text x="-105" y="0" font-family="system-ui, sans-serif" font-size="10" fill="white" opacity="0.5">Feb 18, 2026 • 21:30</text>
+    <text x="-105" y="20" font-family="system-ui, sans-serif" font-size="10" fill="#7d49f8">+25 points</text>
+    
+    <!-- Mission card -->
+    <rect x="-120" y="50" width="240" height="80" rx="12" fill="#252545"/>
+    <text x="-105" y="75" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white">Active Mission</text>
+    <text x="-105" y="95" font-family="system-ui, sans-serif" font-size="11" fill="white" opacity="0.7">Planet Parade Challenge</text>
+    <rect x="-105" y="105" width="180" height="6" rx="3" fill="#333"/>
+    <rect x="-105" y="105" width="120" height="6" rx="3" fill="url(#btnGrad)"/>
+    <text x="95" y="113" font-family="system-ui, sans-serif" font-size="10" fill="white" opacity="0.6">4/6</text>
+    
+    <!-- Bottom nav -->
+    <rect x="-135" y="220" width="270" height="60" fill="#0a0e17"/>
+    <text x="-80" y="255" font-size="20" text-anchor="middle">🏠</text>
+    <text x="-20" y="255" font-size="20" text-anchor="middle">🔭</text>
+    <text x="40" y="255" font-size="20" text-anchor="middle">📅</text>
+    <text x="100" y="255" font-size="20" text-anchor="middle">👤</text>
+  </g>
+  
+  <!-- Left side content -->
+  <g transform="translate(150, 400)">
+    <text x="0" y="-100" font-family="system-ui, sans-serif" font-size="48" font-weight="800" fill="white">Track Your</text>
+    <text x="0" y="-40" font-family="system-ui, sans-serif" font-size="48" font-weight="800" fill="url(#btnGrad)">Cosmic Journey</text>
+    
+    <text x="0" y="30" font-family="system-ui, sans-serif" font-size="18" fill="white" opacity="0.7">Log observations, complete missions,</text>
+    <text x="0" y="55" font-family="system-ui, sans-serif" font-size="18" fill="white" opacity="0.7">and earn badges as you explore.</text>
+    
+    <rect x="0" y="100" width="180" height="50" rx="25" fill="url(#btnGrad)"/>
+    <text x="90" y="132" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="white" text-anchor="middle">Start Free</text>
+  </g>
+</svg>

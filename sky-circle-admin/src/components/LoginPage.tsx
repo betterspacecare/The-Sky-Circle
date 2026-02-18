@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
-import { Loader2, Sparkles, Lock, Mail, AlertCircle } from 'lucide-react'
+import { Loader2, Lock, Mail, AlertCircle } from 'lucide-react'
 
 interface LoginPageProps {
     onForgotPassword: () => void

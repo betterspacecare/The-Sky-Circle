@@ -1,6 +1,6 @@
 import { Metadata } from 'next'
 
-const baseUrl = 'https://theskycircle.com'
+const baseUrl = 'https://www.skyguild.club'
 
 export const defaultMetadata: Metadata = {
   metadataBase: new URL(baseUrl),
@@ -22,7 +22,7 @@ export const pageMetadata = {
       siteName: "SkyGuild",
       images: [
         {
-          url: `${baseUrl}/og-image.jpg`,
+          url: `${baseUrl}/og-image.svg`,
           width: 1200,
           height: 630,
           alt: "SkyGuild - Astronomy Community Platform",
@@ -40,7 +40,7 @@ export const pageMetadata = {
       url: `${baseUrl}/about`,
       images: [
         {
-          url: `${baseUrl}/og-about.jpg`,
+          url: `${baseUrl}/og-image.svg`,
           width: 1200,
           height: 630,
           alt: "About SkyGuild",

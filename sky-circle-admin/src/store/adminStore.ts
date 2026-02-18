@@ -275,7 +275,12 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     },
 
     deleteEvent: async (id) => {
-        const { error } = await supabase.from('events').delete().eq('id', id)
+        console.log('Attempting to delete event:', id)
+        const { error, count } = await supabase.from('events').delete().eq('id', id).select()
+        console.log('Delete result:', { error, count })
+        if (error) {
+            console.error('Delete event error:', error)
+        }
         if (!error) await get().fetchEvents()
         return { error: error?.message || null }
     },

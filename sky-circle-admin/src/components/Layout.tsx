@@ -13,7 +13,6 @@ import {
     LogOut,
     Menu,
     X,
-    Sparkles,
     Shield,
     ShieldCheck,
     UsersRound,

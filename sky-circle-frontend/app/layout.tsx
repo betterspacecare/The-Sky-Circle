@@ -7,7 +7,7 @@ import GoogleAnalytics from "@/components/analytics/GoogleAnalytics";
 import { Analytics } from "@/components/analytics/Analytics";
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://theskycircle.com'),
+  metadataBase: new URL('https://www.skyguild.club'),
   title: {
     default: "SkyGuild - Astronomy Community & Stargazing Platform",
     template: "%s | SkyGuild"
@@ -40,13 +40,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://theskycircle.com",
+    url: "https://www.skyguild.club",
     siteName: "SkyGuild",
     title: "SkyGuild - Astronomy Community & Stargazing Platform",
     description: "Join SkyGuild, the ultimate astronomy community. Log observations, earn badges, complete missions, and explore the cosmos with fellow stargazers.",
     images: [
       {
-        url: "/og-image.jpg",
+        url: "/og-image.svg",
         width: 1200,
         height: 630,
         alt: "SkyGuild - Astronomy Community Platform",
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "SkyGuild - Astronomy Community & Stargazing Platform",
     description: "Join SkyGuild, the ultimate astronomy community. Log observations, earn badges, and explore the cosmos with fellow stargazers.",
-    images: ["/og-image.jpg"],
+    images: ["/og-image.svg"],
     creator: "@skyguild",
   },
   robots: {
@@ -77,7 +77,7 @@ export const metadata: Metadata = {
     // bing: "your-bing-verification-code",
   },
   alternates: {
-    canonical: "https://theskycircle.com",
+    canonical: "https://www.skyguild.club",
   },
   category: "Science & Education",
 };

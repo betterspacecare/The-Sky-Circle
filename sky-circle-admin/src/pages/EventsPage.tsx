@@ -77,7 +77,12 @@ export function EventsPage() {
 
     const handleDelete = async (id: string) => {
         if (confirm('Are you sure you want to delete this event?')) {
-            await deleteEvent(id)
+            console.log('Deleting event:', id)
+            const result = await deleteEvent(id)
+            console.log('Delete result:', result)
+            if (result.error) {
+                alert('Failed to delete event: ' + result.error)
+            }
         }
     }
 

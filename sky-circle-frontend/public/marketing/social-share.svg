@@ -1,0 +1,71 @@
+<svg width="1080" height="1080" viewBox="0 0 1080 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0e17"/>
+      <stop offset="50%" style="stop-color:#1a1040"/>
+      <stop offset="100%" style="stop-color:#0a0e17"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7d49f8"/>
+      <stop offset="100%" style="stop-color:#f11856"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="30%" cy="30%" r="50%">
+      <stop offset="0%" style="stop-color:#7d49f8;stop-opacity:0.4"/>
+      <stop offset="100%" style="stop-color:#7d49f8;stop-opacity:0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="70%" cy="70%" r="50%">
+      <stop offset="0%" style="stop-color:#f11856;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#f11856;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1080" height="1080" fill="url(#bg)"/>
+  <rect width="1080" height="1080" fill="url(#glow1)"/>
+  <rect width="1080" height="1080" fill="url(#glow2)"/>
+  
+  <!-- Stars -->
+  <g opacity="0.7">
+    <circle cx="100" cy="100" r="3" fill="white"/>
+    <circle cx="200" cy="250" r="2" fill="white"/>
+    <circle cx="350" cy="150" r="2.5" fill="white"/>
+    <circle cx="500" cy="80" r="2" fill="white"/>
+    <circle cx="700" cy="200" r="3" fill="white"/>
+    <circle cx="850" cy="120" r="2" fill="white"/>
+    <circle cx="950" cy="300" r="2.5" fill="white"/>
+    <circle cx="80" cy="500" r="2" fill="white"/>
+    <circle cx="180" cy="700" r="3" fill="white"/>
+    <circle cx="300" cy="850" r="2" fill="white"/>
+    <circle cx="500" cy="950" r="2.5" fill="white"/>
+    <circle cx="750" cy="900" r="2" fill="white"/>
+    <circle cx="900" cy="800" r="3" fill="white"/>
+    <circle cx="980" cy="600" r="2" fill="white"/>
+    <circle cx="1000" cy="450" r="2.5" fill="white"/>
+  </g>
+  
+  <!-- Main content -->
+  <g transform="translate(540, 540)">
+    <!-- Icon circle -->
+    <circle cx="0" cy="-180" r="100" fill="url(#accent)"/>
+    
+    <!-- Telescope icon -->
+    <g transform="translate(-35, -215)">
+      <path d="M60 15L20 55M20 55L5 70M20 55L35 70M60 15L68 7M60 15L52 23" stroke="white" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="68" cy="7" r="12" stroke="white" stroke-width="4" fill="none"/>
+    </g>
+    
+    <!-- SkyGuild text -->
+    <text x="0" y="-20" font-family="system-ui, -apple-system, sans-serif" font-size="96" font-weight="900" fill="white" text-anchor="middle">SkyGuild</text>
+    
+    <!-- Tagline -->
+    <text x="0" y="60" font-family="system-ui, -apple-system, sans-serif" font-size="36" fill="white" opacity="0.8" text-anchor="middle">Look up. Stay curious.</text>
+    
+    <!-- Features -->
+    <text x="0" y="160" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="white" opacity="0.6" text-anchor="middle">🔭 Log Observations</text>
+    <text x="0" y="200" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="white" opacity="0.6" text-anchor="middle">🏆 Earn Badges</text>
+    <text x="0" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="white" opacity="0.6" text-anchor="middle">🌟 Join Events</text>
+    
+    <!-- Website -->
+    <text x="0" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="28" fill="url(#accent)" text-anchor="middle">www.skyguild.club</text>
+  </g>
+</svg>
