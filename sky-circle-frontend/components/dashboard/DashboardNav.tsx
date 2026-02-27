@@ -115,7 +115,7 @@ export default function DashboardNav() {
         
         // Content & Activity
         { href: '/dashboard/observations', label: 'Observations', icon: Eye },
-        { href: '/dashboard/sky-finder', label: 'Sky Finder', icon: Telescope },
+        { href: 'https://watch.skyguild.club', label: 'Sky Finder', icon: Telescope, external: true },
         { href: '/dashboard/timeline', label: 'Timeline', icon: Newspaper },
         { href: '/dashboard/events', label: 'Events', icon: Calendar },
         
@@ -148,6 +148,23 @@ export default function DashboardNav() {
                                 {navItems.map((item) => {
                                     const Icon = item.icon
                                     const isActive = pathname === item.href
+                                    const isExternal = 'external' in item && item.external
+                                    
+                                    if (isExternal) {
+                                        return (
+                                            <a
+                                                key={item.href}
+                                                href={item.href}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 px-3 xl:px-4 py-2.5 rounded-lg transition-all duration-300 text-surface-400 hover:text-surface-50 hover:bg-white/5"
+                                            >
+                                                <Icon className="w-4 h-4" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">{item.label}</span>
+                                            </a>
+                                        )
+                                    }
+                                    
                                     return (
                                         <Link
                                             key={item.href}
@@ -275,6 +292,24 @@ export default function DashboardNav() {
                         {navItems.map((item) => {
                             const Icon = item.icon
                             const isActive = pathname === item.href
+                            const isExternal = 'external' in item && item.external
+                            
+                            if (isExternal) {
+                                return (
+                                    <a
+                                        key={item.href}
+                                        href={item.href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-surface-400 hover:text-surface-50 hover:bg-white/5"
+                                    >
+                                        <Icon className="w-5 h-5" />
+                                        <span className="text-sm font-medium">{item.label}</span>
+                                    </a>
+                                )
+                            }
+                            
                             return (
                                 <Link
                                     key={item.href}
